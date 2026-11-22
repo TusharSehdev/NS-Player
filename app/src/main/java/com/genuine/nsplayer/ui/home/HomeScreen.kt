@@ -21,7 +21,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.genuine.nsplayer.data.model.Channel
 import com.genuine.nsplayer.data.model.ContentType
 import com.genuine.nsplayer.ui.common.*
@@ -34,13 +33,15 @@ fun HomeScreen(
     onPlayChannel: (Channel) -> Unit,
     onPlayDirectStream: (String, Map<String, String>, String?, String?) -> Unit,
     onNavigateToChannels: () -> Unit,
-    onNavigateToPlaylists: () -> Unit
+    onNavigateToPlaylists: () -> Unit,
+    onNavigateToExtensions: () -> Unit = {}
 ) {
     val playlists by viewModel.playlists.collectAsState()
     val activeId by viewModel.activePlaylistId.collectAsState()
     val continueWatching by viewModel.continueWatching.collectAsState()
     val favorites by viewModel.favorites.collectAsState()
     val history by viewModel.history.collectAsState()
+    val installedPlugins by viewModel.installedPlugins.collectAsState()
 
     val activePlaylist = playlists.firstOrNull { it.id == activeId }
     var showDirectStreamDialog by remember { mutableStateOf(false) }
@@ -52,7 +53,7 @@ fun HomeScreen(
         verticalArrangement = Arrangement.spacedBy(22.dp),
         contentPadding = PaddingValues(top = 18.dp, bottom = 90.dp)
     ) {
-        // Top Header: Branding + Status Pill + Stream URL Action Button
+        // Top Header: NEXORA Wordmark & Tagline + Direct Stream Action
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -63,44 +64,60 @@ fun HomeScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.primary,
+                            color = NexoraPrimaryAccent,
                             modifier = Modifier.size(34.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
-                                Icon(Icons.Default.LiveTv, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                                Icon(
+                                    Icons.Default.PlayArrow,
+                                    contentDescription = null,
+                                    tint = NexoraBackground,
+                                    modifier = Modifier.size(22.dp)
+                                )
                             }
                         }
-                        Spacer(Modifier.width(10.dp))
-                        Text(
-                            text = "NS Player",
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = NSTextPrimary
-                        )
+                        Spacer(Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "NEXORA",
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = NexoraTextPrimary,
+                                letterSpacing = 1.sp
+                            )
+                            Text(
+                                text = "Your Media. Your Way.",
+                                fontSize = 11.sp,
+                                color = NexoraTextSecondary
+                            )
+                        }
                     }
 
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.height(8.dp))
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
                                 .size(6.dp)
                                 .clip(CircleShape)
-                                .background(if (activePlaylist != null) NSEPGGreen else NSTextMuted)
+                                .background(if (activePlaylist != null) NexoraSuccess else NexoraTextMuted)
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
                             text = if (activePlaylist != null) "${activePlaylist.name} • ${activePlaylist.channelCount} Channels" else "No active playlist selected",
                             fontSize = 12.sp,
-                            color = NSTextSecondary
+                            color = NexoraTextSecondary
                         )
                     }
                 }
 
                 Button(
                     onClick = { showDirectStreamDialog = true },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = NexoraPrimaryAccent,
+                        contentColor = NexoraBackground
+                    ),
+                    shape = RoundedCornerShape(8.dp),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
                 ) {
                     Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -113,8 +130,11 @@ fun HomeScreen(
         // Spotlight Hero Card
         item {
             HeroBanner(
-                title = activePlaylist?.name ?: "Welcome to NS Player",
-                subtitle = if (activePlaylist != null) "${activePlaylist.channelCount} channels ready for streaming" else "Add an M3U / M3U8 playlist or direct link to start watching",
+                title = activePlaylist?.name ?: "Welcome to NEXORA",
+                subtitle = if (activePlaylist != null)
+                    "${activePlaylist.channelCount} channels available for streaming"
+                else
+                    "Import an M3U/M3U8 playlist or explore community extensions to start streaming.",
                 tag = if (activePlaylist != null) "ACTIVE PLAYLIST" else "GET STARTED",
                 onPlayClick = {
                     if (favorites.isNotEmpty()) {
@@ -127,7 +147,7 @@ fun HomeScreen(
             )
         }
 
-        // Quick Navigation Rail: Live TV | Movies | Series | Playlists
+        // Quick Navigation Rail: Live TV | Movies | Series | Extensions
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -137,7 +157,7 @@ fun HomeScreen(
                     title = "Live TV",
                     subtitle = "All Channels",
                     icon = Icons.Default.LiveTv,
-                    iconTint = NSPrimary,
+                    iconTint = NexoraPrimaryAccent,
                     onClick = {
                         viewModel.selectContentType(ContentType.LIVE_TV)
                         onNavigateToChannels()
@@ -149,7 +169,7 @@ fun HomeScreen(
                     title = "Movies",
                     subtitle = "VOD Cinema",
                     icon = Icons.Default.Movie,
-                    iconTint = CyberPurplePrimary,
+                    iconTint = NexoraSecondaryAccent,
                     onClick = {
                         viewModel.selectContentType(ContentType.MOVIE)
                         onNavigateToChannels()
@@ -161,7 +181,7 @@ fun HomeScreen(
                     title = "TV Series",
                     subtitle = "Shows & Seasons",
                     icon = Icons.Default.Tv,
-                    iconTint = EmeraldPrimary,
+                    iconTint = NexoraSuccess,
                     onClick = {
                         viewModel.selectContentType(ContentType.SERIES)
                         onNavigateToChannels()
@@ -170,11 +190,11 @@ fun HomeScreen(
                 )
 
                 QuickNavCard(
-                    title = "Playlists",
-                    subtitle = "${playlists.size} Saved",
-                    icon = Icons.AutoMirrored.Filled.PlaylistPlay,
-                    iconTint = AmberGlowPrimary,
-                    onClick = onNavigateToPlaylists,
+                    title = "Extensions",
+                    subtitle = "${installedPlugins.size} Active",
+                    icon = Icons.Default.Extension,
+                    iconTint = NexoraWarning,
+                    onClick = onNavigateToExtensions,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -230,7 +250,8 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(96.dp),
-                shape = RoundedCornerShape(14.dp)
+                shape = RoundedCornerShape(12.dp),
+                backgroundColor = NexoraSurface
             ) {
                 Row(
                     modifier = Modifier
@@ -241,32 +262,44 @@ fun HomeScreen(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                            shape = RoundedCornerShape(10.dp),
+                            color = NexoraPrimaryAccent.copy(alpha = 0.15f),
                             modifier = Modifier.size(54.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     Icons.AutoMirrored.Filled.PlaylistPlay,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(34.dp)
+                                    tint = NexoraPrimaryAccent,
+                                    modifier = Modifier.size(32.dp)
                                 )
                             }
                         }
                         Spacer(Modifier.width(16.dp))
                         Column {
-                            Text("Playlist Management", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = NSTextPrimary)
-                            Text("${playlists.size} playlists loaded • Tap to manage or add new sources", fontSize = 12.sp, color = NSTextSecondary)
+                            Text(
+                                "Playlist Management",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                color = NexoraTextPrimary
+                            )
+                            Text(
+                                "${playlists.size} playlists loaded • Tap to manage or import new sources",
+                                fontSize = 12.sp,
+                                color = NexoraTextSecondary
+                            )
                         }
                     }
 
                     Button(
                         onClick = onNavigateToPlaylists,
-                        colors = ButtonDefaults.buttonColors(containerColor = NSSurfaceVariant),
-                        shape = RoundedCornerShape(8.dp)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = NexoraSurfaceElevated,
+                            contentColor = NexoraPrimaryAccent
+                        ),
+                        shape = RoundedCornerShape(6.dp)
                     ) {
-                        Text("Manage", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                        Text("Manage", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
                 }
             }
@@ -284,7 +317,8 @@ fun HomeScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(58.dp),
-                            shape = RoundedCornerShape(10.dp)
+                            shape = RoundedCornerShape(10.dp),
+                            backgroundColor = NexoraSurface
                         ) {
                             Row(
                                 modifier = Modifier
@@ -294,18 +328,28 @@ fun HomeScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                                    Icon(Icons.Default.Tv, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                                    Icon(
+                                        Icons.Default.Tv,
+                                        contentDescription = null,
+                                        tint = NexoraPrimaryAccent,
+                                        modifier = Modifier.size(20.dp)
+                                    )
                                     Spacer(Modifier.width(14.dp))
                                     Text(
                                         text = item.title,
-                                        color = NSTextPrimary,
+                                        color = NexoraTextPrimary,
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Medium,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
                                 }
-                                Icon(Icons.Default.PlayArrow, contentDescription = null, tint = NSTextSecondary, modifier = Modifier.size(20.dp))
+                                Icon(
+                                    Icons.Default.PlayArrow,
+                                    contentDescription = null,
+                                    tint = NexoraTextSecondary,
+                                    modifier = Modifier.size(20.dp)
+                                )
                             }
                         }
                     }
@@ -336,7 +380,6 @@ fun DirectStreamDialog(
     var drmScheme by remember { mutableStateOf("") }
     var drmLicense by remember { mutableStateOf("") }
 
-    // Quick test stream presets
     val presets = listOf(
         "Big Buck Bunny (HLS)" to "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
         "Tears of Steel (HLS 1080p)" to "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8",
@@ -346,37 +389,42 @@ fun DirectStreamDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text("Play Network Stream", color = NSTextPrimary, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text("Play Network Stream", color = NexoraTextPrimary, fontWeight = FontWeight.Bold, fontSize = 18.sp)
         },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Enter any M3U8, HLS, MP4 or progressive stream link:", color = NSTextSecondary, fontSize = 12.sp)
+                Text("Enter any M3U8, HLS, MP4 or progressive stream link:", color = NexoraTextSecondary, fontSize = 12.sp)
 
                 OutlinedTextField(
                     value = url,
                     onValueChange = { url = it },
                     label = { Text("Stream URL (M3U8 / HTTP)") },
                     singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = NexoraPrimaryAccent,
+                        unfocusedBorderColor = NexoraBorder,
+                        focusedTextColor = NexoraTextPrimary,
+                        unfocusedTextColor = NexoraTextPrimary
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Presets row
-                Text("Or select a test sample:", color = NSTextMuted, fontSize = 11.sp)
+                Text("Or select a test sample:", color = NexoraTextMuted, fontSize = 11.sp)
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     presets.forEach { (name, link) ->
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = NSSurfaceVariant,
+                            color = NexoraSurfaceElevated,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { url = link }
                         ) {
                             Text(
                                 text = "▶ $name",
-                                color = MaterialTheme.colorScheme.primary,
+                                color = NexoraPrimaryAccent,
                                 fontSize = 12.sp,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                             )
@@ -391,6 +439,12 @@ fun DirectStreamDialog(
                     onValueChange = { userAgent = it },
                     label = { Text("User-Agent (Optional)") },
                     singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = NexoraPrimaryAccent,
+                        unfocusedBorderColor = NexoraBorder,
+                        focusedTextColor = NexoraTextPrimary,
+                        unfocusedTextColor = NexoraTextPrimary
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -399,6 +453,12 @@ fun DirectStreamDialog(
                     onValueChange = { referer = it },
                     label = { Text("Referer (Optional)") },
                     singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = NexoraPrimaryAccent,
+                        unfocusedBorderColor = NexoraBorder,
+                        focusedTextColor = NexoraTextPrimary,
+                        unfocusedTextColor = NexoraTextPrimary
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -420,17 +480,20 @@ fun DirectStreamDialog(
                     }
                 },
                 enabled = url.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = NexoraPrimaryAccent,
+                    contentColor = NexoraBackground
+                )
             ) {
                 Text("Play Stream")
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = NSTextSecondary)
+                Text("Cancel", color = NexoraTextSecondary)
             }
         },
-        containerColor = NSSurface,
-        shape = RoundedCornerShape(16.dp)
+        containerColor = NexoraSurface,
+        shape = RoundedCornerShape(14.dp)
     )
 }

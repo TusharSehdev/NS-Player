@@ -10,9 +10,11 @@ import androidx.room.RoomDatabase
         PlaylistEntity::class,
         ChannelEntity::class,
         HistoryEntity::class,
-        EpgEntity::class
+        EpgEntity::class,
+        PluginEntity::class,
+        PluginRepositoryEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -20,6 +22,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun channelDao(): ChannelDao
     abstract fun historyDao(): HistoryDao
     abstract fun epgDao(): EpgDao
+    abstract fun pluginDao(): PluginDao
 
     companion object {
         @Volatile
@@ -30,7 +33,7 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "ns_player.db"
+                    "nexora.db"
                 ).fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

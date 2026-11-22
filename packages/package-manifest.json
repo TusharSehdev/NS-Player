@@ -1,78 +1,45 @@
-{
-  "appName": "NS Player",
-  "applicationId": "com.genuine.nsplayer",
-  "versionName": "1.0.0",
-  "versionCode": 1,
-  "minSdkVersion": 24,
-  "targetSdkVersion": 34,
-  "compileSdkVersion": 35,
-  "releaseDate": "2026-11-22",
-  "signatures": {
-    "scheme": "APK Signature Scheme v2",
-    "status": "Verified"
-  },
-  "remoteControlSupport": {
-    "status": "Fully Supported",
-    "dpadNavigation": true,
-    "fastZapping": true,
-    "inPlayerChannelDrawer": true,
-    "audioSubtitleSelection": true,
-    "hardwareVolumeKeys": true
-  },
-  "packages": [
+        {
+          "application": "NEXORA",
+          "tagline": "Your Media. Your Way.",
+          "version": "1.0.0",
+          "versionCode": 1,
+          "buildTimestamp": 1795368742260,
+          "packages": [
+            {
+  "filename": "NEXORA-universal-release.apk",
+  "description": "Universal (Mobile + TV) Release APK",
+  "sizeBytes": 16132314,
+  "sha256": "4bc1e257dd9a3ccb0237f9f3319431df2875e6804d65441581f05fcff1040662"
+},
     {
-      "filename": "NS-Player-universal-release.apk",
-      "variant": "release",
-      "architecture": "universal",
-      "supportedAbis": ["arm64-v8a", "armeabi-v7a", "x86_64", "x86"],
-      "sizeBytes": 16208493,
-      "sha256": "3ac495962c503b2e00b491012a7a8d89272360915ed71c8772d2dd77573b1c9c",
-      "recommendedFor": "Universal compatibility across all Android TVs, Fire TVs, Smartphones, Tablets, and Emulators"
-    },
+  "filename": "NEXORA-arm64-v8a-release.apk",
+  "description": "ARM64 64-bit Architecture Release APK",
+  "sizeBytes": 16034378,
+  "sha256": "f234af22fadfaf220567248e78c10c84d91bf02edaa141c1427f11156d472f3b"
+},
     {
-      "filename": "NS-Player-arm64-v8a-release.apk",
-      "variant": "release",
-      "architecture": "arm64-v8a",
-      "supportedAbis": ["arm64-v8a"],
-      "sizeBytes": 16110557,
-      "sha256": "c53ce1b0367738f37aff4cee415ab85efef8a0fd8c687bebc0643a5e498cc7f3",
-      "recommendedFor": "Modern 64-bit ARM smartphones, Google TV Streamer 4K, NVIDIA Shield TV, Fire TV Cube 3rd Gen"
-    },
+  "filename": "NEXORA-armeabi-v7a-release.apk",
+  "description": "ARMv7 32-bit Architecture Release APK",
+  "sizeBytes": 16031686,
+  "sha256": "08b7adf2fd9a6d49cf981e48c55c69eed7f412d5bb12bbade88f2ae0f478825c"
+},
     {
-      "filename": "NS-Player-armeabi-v7a-release.apk",
-      "variant": "release",
-      "architecture": "armeabi-v7a",
-      "supportedAbis": ["armeabi-v7a"],
-      "sizeBytes": 16107865,
-      "sha256": "0fea925a9706a4800739c55bd595edc316b1b44a600db583458608515e094f3b",
-      "recommendedFor": "32-bit legacy TV boxes, Fire TV Stick 4K (1st/2nd Gen), Fire TV Stick Lite/Max, older phones"
-    },
+  "filename": "NEXORA-x86_64-release.apk",
+  "description": "x86_64 Architecture Release APK",
+  "sizeBytes": 16033484,
+  "sha256": "d87bb0407d740c3603453dc603674af8c095be596b67626ae3c661a66730c9a8"
+},
     {
-      "filename": "NS-Player-x86_64-release.apk",
-      "variant": "release",
-      "architecture": "x86_64",
-      "supportedAbis": ["x86_64"],
-      "sizeBytes": 16109663,
-      "sha256": "4594543cfd162bd753b190b1f63d28a1303cd962bc2cbcb495811bca56239d8b",
-      "recommendedFor": "64-bit Android Studio Emulators, ChromeOS devices, Windows Subsystem for Android (WSA)"
-    },
+  "filename": "NEXORA-x86-release.apk",
+  "description": "x86 Architecture Release APK",
+  "sizeBytes": 16032402,
+  "sha256": "0a1e2d265ed93a034d50f900d5540f34d23ba11267ef34be2f489eeab7f782c3"
+},
     {
-      "filename": "NS-Player-x86-release.apk",
-      "variant": "release",
-      "architecture": "x86",
-      "supportedAbis": ["x86"],
-      "sizeBytes": 16108581,
-      "sha256": "384a46d9f68d3b51359edacfa2b773938c6b2f7ffde36212fd334923bf68990f",
-      "recommendedFor": "32-bit x86 emulators and legacy Intel Atom devices"
-    },
-    {
-      "filename": "NS-Player-universal-debug.apk",
-      "variant": "debug",
-      "architecture": "universal",
-      "supportedAbis": ["arm64-v8a", "armeabi-v7a", "x86_64", "x86"],
-      "sizeBytes": 22734438,
-      "sha256": "589c0ceb83bbe9eeec12acf77e065871b9845b810e213058f5395b0a8946f090",
-      "recommendedFor": "Development testing, debugging with ADB logcat"
-    }
-  ]
+  "filename": "NEXORA-universal-debug.apk",
+  "description": "Universal Debug Development APK",
+  "sizeBytes": 23541915,
+  "sha256": "620c63ccc3d31ad355fdf153a6342b038d664daadef22623442711a255c7ad54"
 }
+          ]
+        }

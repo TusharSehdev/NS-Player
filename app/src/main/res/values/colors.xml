@@ -1,13 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ns_black">#0D0E15</color>
-    <color name="ns_surface">#161922</color>
-    <color name="ns_surface_variant">#212532</color>
-    <color name="ns_primary">#3D7BFF</color>
-    <color name="ns_primary_variant">#1E56D0</color>
-    <color name="ns_accent">#00E5FF</color>
-    <color name="ns_focus_highlight">#5C9BFF</color>
-    <color name="ns_text_primary">#F0F3F9</color>
-    <color name="ns_text_secondary">#9DA5B8</color>
-    <color name="ns_error">#FF4D4D</color>
+    <!-- NEXORA Cinematic Palette -->
+    <color name="nexora_background">#0B0D12</color>
+    <color name="nexora_background_secondary">#121620</color>
+    <color name="nexora_surface">#191F2B</color>
+    <color name="nexora_surface_elevated">#202938</color>
+    <color name="nexora_border">#2B3547</color>
+    <color name="nexora_border_focused">#78A9FF</color>
+    
+    <color name="nexora_accent_primary">#78A9FF</color>
+    <color name="nexora_accent_secondary">#A5B9DC</color>
+    
+    <color name="nexora_text_primary">#F4F6FA</color>
+    <color name="nexora_text_secondary">#9AA5B5</color>
+    <color name="nexora_text_muted">#687386</color>
+    
+    <color name="nexora_success">#4CAF86</color>
+    <color name="nexora_error">#E36D72</color>
+    <color name="nexora_warning">#E4B568</color>
+
+    <!-- Legacy compatibility aliases -->
+    <color name="ns_black">#0B0D12</color>
+    <color name="ns_surface">#191F2B</color>
+    <color name="ns_surface_variant">#202938</color>
+    <color name="ns_primary">#78A9FF</color>
+    <color name="ns_primary_variant">#191F2B</color>
+    <color name="ns_accent">#78A9FF</color>
+    <color name="ns_focus_highlight">#78A9FF</color>
+    <color name="ns_text_primary">#F4F6FA</color>
+    <color name="ns_text_secondary">#9AA5B5</color>
+    <color name="ns_error">#E36D72</color>
 </resources>

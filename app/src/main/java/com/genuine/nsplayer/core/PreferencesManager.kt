@@ -63,6 +63,10 @@ class PreferencesManager(private val context: Context) {
         }
     }
 
+    suspend fun setParentalEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[KEY_PARENTAL_ENABLED] = enabled }
+    }
+
     suspend fun setActivePlaylistId(id: Long) {
         context.dataStore.edit { it[KEY_ACTIVE_PLAYLIST_ID] = id }
     }

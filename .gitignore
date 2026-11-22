@@ -1,5 +1,5 @@
 # ====================================================================
-# Git Ignore for NS Player (Android TV & Mobile IPTV Media Player)
+# Git Ignore for NEXORA (Android TV & Mobile IPTV Media Player)
 # ====================================================================
 
 # Built Application Binaries & Intermediate Artifacts
@@ -13,11 +13,15 @@ bin/
 *.dex
 *.class
 
-# Allow standalone distribution packages in packages/
+# Allow standalone distribution packages in packages/ and dist/
 !packages/
 !packages/*.apk
 !packages/*.json
 !packages/*.txt
+!dist/
+!dist/*.apk
+!dist/*.json
+!dist/*.txt
 
 # Gradle Caches, Daemon Logs & Temporary Metadata
 .gradle/

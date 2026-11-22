@@ -1,66 +1,88 @@
 package com.genuine.nsplayer.ui.theme
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 
-// Core Deep Void & Obsidian Palette
-val NSBlack = Color(0xFF090A0F)
-val NSSurface = Color(0xFF12151F)
-val NSSurfaceVariant = Color(0xFF1B202E)
-val NSSurfaceCard = Color(0xFF161B26)
-val NSBorder = Color(0xFF262E42)
-val NSBorderFocused = Color(0xFF3D7BFF)
+// ==========================================
+// NEXORA CINEMATIC DESIGN SYSTEM PALETTE
+// ==========================================
+val NexoraBackground = Color(0xFF0B0D12)
+val NexoraBackgroundSecondary = Color(0xFF121620)
+val NexoraSurface = Color(0xFF191F2B)
+val NexoraSurfaceElevated = Color(0xFF202938)
+val NexoraBorder = Color(0xFF2B3547)
+val NexoraBorderFocused = Color(0xFF78A9FF)
 
-// Text Colors
-val NSTextPrimary = Color(0xFFF2F5FB)
-val NSTextSecondary = Color(0xFF94A0B8)
-val NSTextMuted = Color(0xFF64748B)
+// Accents (Restrained & Sophisticated)
+val NexoraPrimaryAccent = Color(0xFF78A9FF)
+val NexoraSecondaryAccent = Color(0xFFA5B9DC)
 
-// Status & Accents
-val NSLiveRed = Color(0xFFFF334B)
-val NSEPGGreen = Color(0xFF00E676)
-val NSError = Color(0xFFFF453A)
-val NSWarning = Color(0xFFFF9F0A)
-val NSGold = Color(0xFFFFD600)
+// Typographic Scale Colors
+val NexoraTextPrimary = Color(0xFFF4F6FA)
+val NexoraTextSecondary = Color(0xFF9AA5B5)
+val NexoraTextMuted = Color(0xFF687386)
 
-// Theme Accents
-val NSPrimary = Color(0xFF3D7BFF)
-val NSPrimaryVariant = Color(0xFF1E56D0)
-val NSAccent = Color(0xFF00D2FF)
+// Semantic State Colors
+val NexoraSuccess = Color(0xFF4CAF86)
+val NexoraError = Color(0xFFE36D72)
+val NexoraWarning = Color(0xFFE4B568)
+val NexoraLiveBadge = Color(0xFFFF334B)
 
-val FrostyAuraPrimary = Color(0xFF00E5FF)
-val RedRosePrimary = Color(0xFFFF2A6D)
-val EmeraldPrimary = Color(0xFF05D585)
-val AmberGlowPrimary = Color(0xFFFF9E00)
-val CyberPurplePrimary = Color(0xFF9D4EDD)
+// Aliases for seamless backwards compatibility
+val NSBlack = NexoraBackground
+val NSSurface = NexoraSurface
+val NSSurfaceVariant = NexoraSurfaceElevated
+val NSSurfaceCard = NexoraSurface
+val NSBorder = NexoraBorder
+val NSBorderFocused = NexoraBorderFocused
+val NSTextPrimary = NexoraTextPrimary
+val NSTextSecondary = NexoraTextSecondary
+val NSTextMuted = NexoraTextMuted
+val NSLiveRed = NexoraLiveBadge
+val NSEPGGreen = NexoraSuccess
+val NSError = NexoraError
+val NSWarning = NexoraWarning
+val NSGold = NexoraWarning
+val NSPrimary = NexoraPrimaryAccent
+val NSPrimaryVariant = NexoraSurfaceElevated
+val NSAccent = NexoraSecondaryAccent
+
+// Cinematic Color Variations for User Themes
+val MidnightBlueAccent = Color(0xFF5B93FF)
+val SlateAccent = Color(0xFF94A3B8)
+val EmeraldAccent = Color(0xFF4CAF86)
+val AmberAccent = Color(0xFFE4B568)
 
 fun getThemePrimary(style: String): Color {
     return when (style.lowercase()) {
-        "frosty aura", "frosty cyan" -> FrostyAuraPrimary
-        "red rose", "ruby glow" -> RedRosePrimary
-        "emerald", "emerald stream" -> EmeraldPrimary
-        "amber glow", "amber neon" -> AmberGlowPrimary
-        "cyber purple" -> CyberPurplePrimary
-        else -> NSPrimary
+        "midnight blue" -> MidnightBlueAccent
+        "slate" -> SlateAccent
+        "emerald" -> EmeraldAccent
+        "amber" -> AmberAccent
+        else -> NexoraPrimaryAccent
     }
 }
 
-// Gradients for Hero Cards & Overlays
+// Sophisticated Cinematic Scrims & Overlays (No Cheap Heavy Gradients)
 val HeroGradient = Brush.verticalGradient(
     colors = listOf(
-        Color(0x331B2A4A),
-        Color(0xEE12151F),
-        Color(0xFF12151F)
+        Color(0x33121620),
+        Color(0xCC0B0D12),
+        Color(0xFF0B0D12)
     )
 )
 
 val PlayerScrimTop = Brush.verticalGradient(
     colors = listOf(
         Color(0xDD000000),
-        Color(0x88000000),
+        Color(0x66000000),
         Color.Transparent
     )
 )
@@ -68,33 +90,34 @@ val PlayerScrimTop = Brush.verticalGradient(
 val PlayerScrimBottom = Brush.verticalGradient(
     colors = listOf(
         Color.Transparent,
-        Color(0x99000000),
+        Color(0x88000000),
         Color(0xEE000000)
     )
 )
 
 val CardGlowGradient = Brush.horizontalGradient(
     colors = listOf(
-        Color(0x223D7BFF),
-        Color(0x1100D2FF)
+        Color(0x1A78A9FF),
+        Color(0x0DA5B9DC)
     )
 )
 
-private val DarkColorScheme = darkColorScheme(
-    primary = NSPrimary,
-    onPrimary = Color.White,
-    primaryContainer = NSPrimaryVariant,
-    onPrimaryContainer = Color.White,
-    secondary = NSAccent,
-    onSecondary = Color.Black,
-    background = NSBlack,
-    onBackground = NSTextPrimary,
-    surface = NSSurface,
-    onSurface = NSTextPrimary,
-    surfaceVariant = NSSurfaceVariant,
-    onSurfaceVariant = NSTextSecondary,
-    outline = NSBorder,
-    error = NSError
+private val NexoraColorScheme = darkColorScheme(
+    primary = NexoraPrimaryAccent,
+    onPrimary = Color(0xFF0B0D12),
+    primaryContainer = NexoraSurfaceElevated,
+    onPrimaryContainer = NexoraTextPrimary,
+    secondary = NexoraSecondaryAccent,
+    onSecondary = Color(0xFF0B0D12),
+    background = NexoraBackground,
+    onBackground = NexoraTextPrimary,
+    surface = NexoraSurface,
+    onSurface = NexoraTextPrimary,
+    surfaceVariant = NexoraSurfaceElevated,
+    onSurfaceVariant = NexoraTextSecondary,
+    outline = NexoraBorder,
+    error = NexoraError,
+    onError = Color.White
 )
 
 @Composable
@@ -104,15 +127,21 @@ fun NSPlayerTheme(
     content: @Composable () -> Unit
 ) {
     val primaryColor = getThemePrimary(themeStyle)
-    val colorScheme = DarkColorScheme.copy(
+    val colorScheme = NexoraColorScheme.copy(
         primary = primaryColor,
-        primaryContainer = primaryColor.copy(alpha = 0.25f),
-        secondary = if (themeStyle.equals("Obsidian", ignoreCase = true)) NSAccent else primaryColor
+        primaryContainer = primaryColor.copy(alpha = 0.20f)
     )
 
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography(),
+        shapes = Shapes(
+            extraSmall = RoundedCornerShape(4.dp),
+            small = RoundedCornerShape(6.dp),
+            medium = RoundedCornerShape(8.dp),
+            large = RoundedCornerShape(12.dp),
+            extraLarge = RoundedCornerShape(16.dp)
+        ),
         content = content
     )
 }

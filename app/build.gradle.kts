@@ -1,3 +1,5 @@
+import java.security.MessageDigest
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -121,6 +123,7 @@ dependencies {
 
     // Testing
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
 }
 
@@ -130,25 +133,68 @@ tasks.register("packageDistribution") {
     doLast {
         val root = project.rootDir
         val pkgDir = File(root, "packages")
+        val distDir = File(root, "dist")
         pkgDir.mkdirs()
+        distDir.mkdirs()
 
         val releaseDir = File(project.layout.buildDirectory.get().asFile, "outputs/apk/release")
         val debugDir = File(project.layout.buildDirectory.get().asFile, "outputs/apk/debug")
 
-        val mappings = mapOf(
-            File(releaseDir, "app-universal-release.apk") to File(pkgDir, "NS-Player-universal-release.apk"),
-            File(releaseDir, "app-arm64-v8a-release.apk") to File(pkgDir, "NS-Player-arm64-v8a-release.apk"),
-            File(releaseDir, "app-armeabi-v7a-release.apk") to File(pkgDir, "NS-Player-armeabi-v7a-release.apk"),
-            File(releaseDir, "app-x86_64-release.apk") to File(pkgDir, "NS-Player-x86_64-release.apk"),
-            File(releaseDir, "app-x86-release.apk") to File(pkgDir, "NS-Player-x86-release.apk"),
-            File(debugDir, "app-universal-debug.apk") to File(pkgDir, "NS-Player-universal-debug.apk")
+        val targets = listOf(
+            Triple(File(releaseDir, "app-universal-release.apk"), "NEXORA-universal-release.apk", "Universal (Mobile + TV) Release APK"),
+            Triple(File(releaseDir, "app-arm64-v8a-release.apk"), "NEXORA-arm64-v8a-release.apk", "ARM64 64-bit Architecture Release APK"),
+            Triple(File(releaseDir, "app-armeabi-v7a-release.apk"), "NEXORA-armeabi-v7a-release.apk", "ARMv7 32-bit Architecture Release APK"),
+            Triple(File(releaseDir, "app-x86_64-release.apk"), "NEXORA-x86_64-release.apk", "x86_64 Architecture Release APK"),
+            Triple(File(releaseDir, "app-x86-release.apk"), "NEXORA-x86-release.apk", "x86 Architecture Release APK"),
+            Triple(File(debugDir, "app-universal-debug.apk"), "NEXORA-universal-debug.apk", "Universal Debug Development APK")
         )
 
-        mappings.forEach { (src, dest) ->
+        val shaLines = mutableListOf<String>()
+        val manifestItems = mutableListOf<String>()
+
+        targets.forEach { (src, targetName, desc) ->
             if (src.exists()) {
-                src.copyTo(dest, overwrite = true)
-                println("Successfully Packaged: ${dest.name} (${dest.length()} bytes)")
+                val destPkg = File(pkgDir, targetName)
+                val destDist = File(distDir, targetName)
+                src.copyTo(destPkg, overwrite = true)
+                src.copyTo(destDist, overwrite = true)
+
+                val sha256 = MessageDigest.getInstance("SHA-256")
+                    .digest(destPkg.readBytes())
+                    .joinToString("") { b -> "%02x".format(b) }
+
+                shaLines.add("$sha256  $targetName")
+                manifestItems.add("""
+                    {
+                      "filename": "$targetName",
+                      "description": "$desc",
+                      "sizeBytes": ${destPkg.length()},
+                      "sha256": "$sha256"
+                    }
+                """.trimIndent())
+
+                println("Successfully Packaged: $targetName (${destPkg.length()} bytes)")
             }
         }
+
+        val shaFile = File(pkgDir, "SHA256SUMS.txt")
+        shaFile.writeText(shaLines.joinToString("\n") + "\n")
+        File(distDir, "SHA256SUMS.txt").writeText(shaLines.joinToString("\n") + "\n")
+
+        val manifestJson = """
+        {
+          "application": "NEXORA",
+          "tagline": "Your Media. Your Way.",
+          "version": "1.0.0",
+          "versionCode": 1,
+          "buildTimestamp": ${System.currentTimeMillis()},
+          "packages": [
+            ${manifestItems.joinToString(",\n    ")}
+          ]
+        }
+        """.trimIndent()
+
+        File(pkgDir, "package-manifest.json").writeText(manifestJson)
+        File(distDir, "package-manifest.json").writeText(manifestJson)
     }
 }

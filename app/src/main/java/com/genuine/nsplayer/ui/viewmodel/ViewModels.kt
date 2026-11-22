@@ -23,9 +23,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val playlistRepo = PlaylistRepository(application, db.playlistDao(), db.channelDao(), db.epgDao())
     val channelRepo = ChannelRepository(db.channelDao(), db.epgDao())
     val historyRepo = HistoryRepository(db.historyDao())
+    val pluginRepo = PluginRepositoryManager(application, db.pluginDao())
 
     // Playlists
     val playlists: StateFlow<List<Playlist>> = playlistRepo.getAllPlaylists()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Extensions & Plugins Ecosystem
+    val repositories: StateFlow<List<PluginRepositoryItem>> = pluginRepo.getAllRepositories()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val allPlugins: StateFlow<List<PluginItem>> = pluginRepo.getAllPlugins()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val installedPlugins: StateFlow<List<PluginItem>> = pluginRepo.getInstalledPlugins()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _importProgress = MutableStateFlow<Int?>(null)
@@ -33,6 +44,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
+    private val _infoMessage = MutableStateFlow<String?>(null)
+    val infoMessage: StateFlow<String?> = _infoMessage.asStateFlow()
 
     // Active Selection
     private val _activePlaylistId = MutableStateFlow<Long?>(null)
@@ -157,8 +171,93 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // Extensions & Repositories operations
+    fun addRepository(name: String, url: String) {
+        viewModelScope.launch {
+            try {
+                _importProgress.value = 0
+                _errorMessage.value = null
+                pluginRepo.addRepository(name, url)
+                _infoMessage.value = "Repository added successfully."
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to add repository: ${e.localizedMessage}"
+            } finally {
+                _importProgress.value = null
+            }
+        }
+    }
+
+    fun refreshRepository(repoId: Long) {
+        viewModelScope.launch {
+            try {
+                _importProgress.value = 0
+                _errorMessage.value = null
+                pluginRepo.refreshRepository(repoId)
+                _infoMessage.value = "Repository refreshed successfully."
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to refresh repository: ${e.localizedMessage}"
+            } finally {
+                _importProgress.value = null
+            }
+        }
+    }
+
+    fun deleteRepository(repoId: Long) {
+        viewModelScope.launch {
+            try {
+                pluginRepo.deleteRepository(repoId)
+                _infoMessage.value = "Repository removed."
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to delete repository: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    fun installPlugin(pluginId: String) {
+        viewModelScope.launch {
+            try {
+                pluginRepo.installPlugin(pluginId)
+                _infoMessage.value = "Extension installed."
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to install extension: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    fun updatePlugin(pluginId: String) {
+        viewModelScope.launch {
+            try {
+                pluginRepo.updatePlugin(pluginId)
+                _infoMessage.value = "Extension updated."
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to update extension: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    fun togglePluginEnabled(pluginId: String, enabled: Boolean) {
+        viewModelScope.launch {
+            pluginRepo.setPluginEnabled(pluginId, enabled)
+        }
+    }
+
+    fun uninstallPlugin(pluginId: String) {
+        viewModelScope.launch {
+            try {
+                pluginRepo.uninstallPlugin(pluginId)
+                _infoMessage.value = "Extension uninstalled."
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to uninstall extension: ${e.localizedMessage}"
+            }
+        }
+    }
+
     fun clearError() {
         _errorMessage.value = null
+    }
+
+    fun clearInfo() {
+        _infoMessage.value = null
     }
 }
 
