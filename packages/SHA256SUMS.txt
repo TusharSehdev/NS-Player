@@ -1,0 +1,8 @@
+c39d096c4dc57418c9eb4ec8d7720f10cc2ca7231bc86c6b1fc77fb67b0a43d8  NS-Player-arm64-v8a-debug.apk
+ffa495d2fccb735c166575be5487170e76f80cfc06e01463dfc3910a43e4ec88  NS-Player-arm64-v8a-release.apk
+ec1c489136f8e7ab799de5e55ed56f33e99ae86cd96b12edd20a86e522c1fedc  NS-Player-armeabi-v7a-debug.apk
+f2c6d98157f23bf30c542cb3e552dfdc30bf22ca23ffff199b2b2fa106ec5a81  NS-Player-armeabi-v7a-release.apk
+b7d49de95aef4bcc2873d78c22a642e345a004e77d41e9c161492124ada7881a  NS-Player-universal-debug.apk
+20a0019dd7cfcbd77575a183cf9870d446688a7071e27b917345ab3cc14eaa3e  NS-Player-universal-release.apk
+f4f4da1328203446200d41591f3d20362fd4fb1698afdf265340b37ef19144b3  NS-Player-x86-release.apk
+b0a25297f938314ae33597893594af26ee7d3713ff550545724276aaa1206a72  NS-Player-x86_64-release.apk

@@ -1,0 +1,73 @@
+# ====================================================================
+# Git Ignore for NS Player (Android TV & Mobile IPTV Media Player)
+# ====================================================================
+
+# Built Application Binaries & Intermediate Artifacts
+build/
+*/build/
+out/
+bin/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+
+# Allow standalone distribution packages in packages/
+!packages/
+!packages/*.apk
+!packages/*.json
+!packages/*.txt
+
+# Gradle Caches, Daemon Logs & Temporary Metadata
+.gradle/
+.kotlin/
+gradle-app.setting
+buildOutputCleanup/
+.gradle-build/
+
+# Do NOT ignore Gradle wrapper jar & scripts
+!gradle/wrapper/gradle-wrapper.jar
+!gradlew
+!gradlew.bat
+
+# Local Machine & Environment Configurations
+local.properties
+.bundle/
+
+# Android Studio & IntelliJ IDEA Configuration Files
+.idea/
+*.iml
+*.ipr
+*.iws
+.navigation/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# VS Code Metadata
+.vscode/
+
+# Operating System Hidden Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# JVM Crash Dumps
+hs_err_pid*
+replay_pid*
+
+# Inspection & Temporary Decompilation Workspaces
+apk_unpacked/
+inspected_layouts/
+temp.zip
+temp/
+*.log
+
+# Keystores & Signing Secrets (keep template/sample, ignore private release keys)
+*.private.jks
+*.private.keystore

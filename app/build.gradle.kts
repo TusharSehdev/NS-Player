@@ -22,9 +22,19 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("release.jks")
+            storePassword = "nsplayer123"
+            keyAlias = "nsplayer"
+            keyPassword = "nsplayer123"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -33,6 +43,16 @@ android {
         debug {
             applicationIdSuffix = ".debug"
             isDebuggable = true
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
+
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            isUniversalApk = true
         }
     }
 
@@ -87,6 +107,7 @@ dependencies {
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
+    implementation("androidx.room:room-paging:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
 
     // DataStore Preferences
@@ -98,16 +119,36 @@ dependencies {
     // OkHttp Networking
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
-    // Coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
-
     // Testing
     testImplementation("junit:junit:4.13.2")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
-    androidTestImplementation("androidx.test.ext:junit:1.2.1")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-    androidTestImplementation(composeBom)
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+}
+
+
+tasks.register("packageDistribution") {
+    dependsOn("assembleRelease", "assembleDebug")
+    doLast {
+        val root = project.rootDir
+        val pkgDir = File(root, "packages")
+        pkgDir.mkdirs()
+
+        val releaseDir = File(project.layout.buildDirectory.get().asFile, "outputs/apk/release")
+        val debugDir = File(project.layout.buildDirectory.get().asFile, "outputs/apk/debug")
+
+        val mappings = mapOf(
+            File(releaseDir, "app-universal-release.apk") to File(pkgDir, "NS-Player-universal-release.apk"),
+            File(releaseDir, "app-arm64-v8a-release.apk") to File(pkgDir, "NS-Player-arm64-v8a-release.apk"),
+            File(releaseDir, "app-armeabi-v7a-release.apk") to File(pkgDir, "NS-Player-armeabi-v7a-release.apk"),
+            File(releaseDir, "app-x86_64-release.apk") to File(pkgDir, "NS-Player-x86_64-release.apk"),
+            File(releaseDir, "app-x86-release.apk") to File(pkgDir, "NS-Player-x86-release.apk"),
+            File(debugDir, "app-universal-debug.apk") to File(pkgDir, "NS-Player-universal-debug.apk")
+        )
+
+        mappings.forEach { (src, dest) ->
+            if (src.exists()) {
+                src.copyTo(dest, overwrite = true)
+                println("Successfully Packaged: ${dest.name} (${dest.length()} bytes)")
+            }
+        }
+    }
 }
