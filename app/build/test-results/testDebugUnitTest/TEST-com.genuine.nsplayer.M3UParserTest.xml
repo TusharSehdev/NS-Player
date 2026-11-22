@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.genuine.nsplayer.M3UParserTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-22T13:33:26.337Z" hostname="TUSHARS-DESKTOP" time="0.242">
+  <properties/>
+  <testcase name="testMalformedM3UHandling" classname="com.genuine.nsplayer.M3UParserTest" time="0.231"/>
+  <testcase name="testExtractEpgUrl" classname="com.genuine.nsplayer.M3UParserTest" time="0.005"/>
+  <testcase name="testParseStandardM3UWithMetadata" classname="com.genuine.nsplayer.M3UParserTest" time="0.006"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

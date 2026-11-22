@@ -1,0 +1,69 @@
+com.genuine.nsplayer.app-runtime-release-0 C:\Users\tusha\.gradle\caches\8.14\transforms\14f26f14b31585c127cf10d8048c6201\transformed\runtime-release\res
+com.genuine.nsplayer.app-navigation-compose-2.8.3-1 C:\Users\tusha\.gradle\caches\8.14\transforms\1785414ed13a4ebec3a9a39b204d8d01\transformed\navigation-compose-2.8.3\res
+com.genuine.nsplayer.app-core-ktx-1.13.1-2 C:\Users\tusha\.gradle\caches\8.14\transforms\2cd8bd59cb937d920d5eb3f51ac72359\transformed\core-ktx-1.13.1\res
+com.genuine.nsplayer.app-media3-ui-1.4.1-3 C:\Users\tusha\.gradle\caches\8.14\transforms\2eef5c5c637a31e2fb3fb6b71173d617\transformed\media3-ui-1.4.1\res
+com.genuine.nsplayer.app-navigation-common-2.8.3-4 C:\Users\tusha\.gradle\caches\8.14\transforms\3269d4e3a93dbe0f7bce26c35e5bc289\transformed\navigation-common-2.8.3\res
+com.genuine.nsplayer.app-ui-unit-release-5 C:\Users\tusha\.gradle\caches\8.14\transforms\3585a5574973478fd00f223fa711bc85\transformed\ui-unit-release\res
+com.genuine.nsplayer.app-foundation-release-6 C:\Users\tusha\.gradle\caches\8.14\transforms\4527e107a1e44f641fddca493c8d26e1\transformed\foundation-release\res
+com.genuine.nsplayer.app-savedstate-1.2.1-7 C:\Users\tusha\.gradle\caches\8.14\transforms\495163d3c58d543fada49c8ca06bb65b\transformed\savedstate-1.2.1\res
+com.genuine.nsplayer.app-ui-test-manifest-1.7.4-8 C:\Users\tusha\.gradle\caches\8.14\transforms\49b412be66d0f6c7f08b14849cfc289c\transformed\ui-test-manifest-1.7.4\res
+com.genuine.nsplayer.app-recyclerview-1.3.0-9 C:\Users\tusha\.gradle\caches\8.14\transforms\4acf09116b7ddf73626d20964541364e\transformed\recyclerview-1.3.0\res
+com.genuine.nsplayer.app-animation-core-release-10 C:\Users\tusha\.gradle\caches\8.14\transforms\538d1f21ca76f23a7fbbbf88b2f1c509\transformed\animation-core-release\res
+com.genuine.nsplayer.app-ui-graphics-release-11 C:\Users\tusha\.gradle\caches\8.14\transforms\573af7e55aec6b1ebcb4e10404b8f2d0\transformed\ui-graphics-release\res
+com.genuine.nsplayer.app-core-1.13.1-12 C:\Users\tusha\.gradle\caches\8.14\transforms\5c23429fd86cecbc1748c7529159140b\transformed\core-1.13.1\res
+com.genuine.nsplayer.app-media-1.7.0-13 C:\Users\tusha\.gradle\caches\8.14\transforms\5d127c675f7f86889777742e436dfe2e\transformed\media-1.7.0\res
+com.genuine.nsplayer.app-animation-release-14 C:\Users\tusha\.gradle\caches\8.14\transforms\5ded77e735b2b61f293fcc5ad5e28a09\transformed\animation-release\res
+com.genuine.nsplayer.app-graphics-path-1.0.1-15 C:\Users\tusha\.gradle\caches\8.14\transforms\5f9607a333b9744a0a91eb405a7adfe4\transformed\graphics-path-1.0.1\res
+com.genuine.nsplayer.app-media3-session-1.4.1-16 C:\Users\tusha\.gradle\caches\8.14\transforms\6f1b369bbc1b3286be1842750c9a0816\transformed\media3-session-1.4.1\res
+com.genuine.nsplayer.app-room-ktx-2.6.1-17 C:\Users\tusha\.gradle\caches\8.14\transforms\6ff37fc24f1bf812f85389b791d08707\transformed\room-ktx-2.6.1\res
+com.genuine.nsplayer.app-ui-text-release-18 C:\Users\tusha\.gradle\caches\8.14\transforms\70614b5badce256d7a9d43861626dde1\transformed\ui-text-release\res
+com.genuine.nsplayer.app-core-runtime-2.2.0-19 C:\Users\tusha\.gradle\caches\8.14\transforms\7ba5d90ada81671470b73f68dd8d7e13\transformed\core-runtime-2.2.0\res
+com.genuine.nsplayer.app-activity-1.9.3-20 C:\Users\tusha\.gradle\caches\8.14\transforms\7e2cf7c23685717a99f866ce5cab5df1\transformed\activity-1.9.3\res
+com.genuine.nsplayer.app-material-release-21 C:\Users\tusha\.gradle\caches\8.14\transforms\7f1ba1feed46f8d03513d7d3e5f6f1fd\transformed\material-release\res
+com.genuine.nsplayer.app-lifecycle-viewmodel-savedstate-2.8.6-22 C:\Users\tusha\.gradle\caches\8.14\transforms\80da9399664286025e549c35481a69f7\transformed\lifecycle-viewmodel-savedstate-2.8.6\res
+com.genuine.nsplayer.app-navigation-runtime-ktx-2.8.3-23 C:\Users\tusha\.gradle\caches\8.14\transforms\85dd3d3be29d721e916235061402aaf2\transformed\navigation-runtime-ktx-2.8.3\res
+com.genuine.nsplayer.app-datastore-preferences-release-24 C:\Users\tusha\.gradle\caches\8.14\transforms\88148adc5f5a896a0d6141b0512cc016\transformed\datastore-preferences-release\res
+com.genuine.nsplayer.app-ui-release-25 C:\Users\tusha\.gradle\caches\8.14\transforms\88503a82b5328497aa3d23faa327bb46\transformed\ui-release\res
+com.genuine.nsplayer.app-foundation-layout-release-26 C:\Users\tusha\.gradle\caches\8.14\transforms\890a824c059bfc2499853a1903194a70\transformed\foundation-layout-release\res
+com.genuine.nsplayer.app-appcompat-resources-1.6.1-27 C:\Users\tusha\.gradle\caches\8.14\transforms\8e04aacf12081b15b341130eef429745\transformed\appcompat-resources-1.6.1\res
+com.genuine.nsplayer.app-sqlite-framework-2.4.0-28 C:\Users\tusha\.gradle\caches\8.14\transforms\8f2def23d9e6e22a527d88d0fe651705\transformed\sqlite-framework-2.4.0\res
+com.genuine.nsplayer.app-material-icons-extended-release-29 C:\Users\tusha\.gradle\caches\8.14\transforms\9f0a7b181a1fb4300326f530f57004d3\transformed\material-icons-extended-release\res
+com.genuine.nsplayer.app-savedstate-ktx-1.2.1-30 C:\Users\tusha\.gradle\caches\8.14\transforms\9fea7ed60dfc003927ba464b495c3282\transformed\savedstate-ktx-1.2.1\res
+com.genuine.nsplayer.app-media3-exoplayer-1.4.1-31 C:\Users\tusha\.gradle\caches\8.14\transforms\a08c729d66fa8b125c5419561d1e3bf0\transformed\media3-exoplayer-1.4.1\res
+com.genuine.nsplayer.app-startup-runtime-1.1.1-32 C:\Users\tusha\.gradle\caches\8.14\transforms\a14b621e48e074c56b927189d2d0c778\transformed\startup-runtime-1.1.1\res
+com.genuine.nsplayer.app-activity-compose-1.9.3-33 C:\Users\tusha\.gradle\caches\8.14\transforms\a3d19f63bb9f24907da7e6f02be298d2\transformed\activity-compose-1.9.3\res
+com.genuine.nsplayer.app-lifecycle-runtime-release-34 C:\Users\tusha\.gradle\caches\8.14\transforms\a4aca3010510520bc1c5bfdaad4191a8\transformed\lifecycle-runtime-release\res
+com.genuine.nsplayer.app-annotation-experimental-1.4.1-35 C:\Users\tusha\.gradle\caches\8.14\transforms\a5ab8c628abc3b07b3e1af58e78da360\transformed\annotation-experimental-1.4.1\res
+com.genuine.nsplayer.app-emoji2-1.3.0-36 C:\Users\tusha\.gradle\caches\8.14\transforms\a5f50cb41a51f8601b4381cdb799a414\transformed\emoji2-1.3.0\res
+com.genuine.nsplayer.app-material-ripple-release-37 C:\Users\tusha\.gradle\caches\8.14\transforms\accd7cd6693c7d1fad9cbb522e4a3b4e\transformed\material-ripple-release\res
+com.genuine.nsplayer.app-lifecycle-livedata-core-2.8.6-38 C:\Users\tusha\.gradle\caches\8.14\transforms\b08270ca32059d96cb28ac12df956797\transformed\lifecycle-livedata-core-2.8.6\res
+com.genuine.nsplayer.app-datastore-core-release-39 C:\Users\tusha\.gradle\caches\8.14\transforms\b08ca732661b291044cd42b35015ba04\transformed\datastore-core-release\res
+com.genuine.nsplayer.app-room-runtime-2.6.1-40 C:\Users\tusha\.gradle\caches\8.14\transforms\b2966f8879b3292a9effd2ea9f1ecb93\transformed\room-runtime-2.6.1\res
+com.genuine.nsplayer.app-datastore-release-41 C:\Users\tusha\.gradle\caches\8.14\transforms\ba6d516642f822bc5e920d041a3c564d\transformed\datastore-release\res
+com.genuine.nsplayer.app-lifecycle-viewmodel-ktx-2.8.6-42 C:\Users\tusha\.gradle\caches\8.14\transforms\bc7a14d4f705e623b334177dc36b20da\transformed\lifecycle-viewmodel-ktx-2.8.6\res
+com.genuine.nsplayer.app-sqlite-2.4.0-43 C:\Users\tusha\.gradle\caches\8.14\transforms\c4c219b07457b3683f8de1548fadee8c\transformed\sqlite-2.4.0\res
+com.genuine.nsplayer.app-runtime-saveable-release-44 C:\Users\tusha\.gradle\caches\8.14\transforms\c6cfeb2edef2fac1e586fbdc2d49a194\transformed\runtime-saveable-release\res
+com.genuine.nsplayer.app-lifecycle-runtime-compose-release-45 C:\Users\tusha\.gradle\caches\8.14\transforms\cb62c43045202fa44c9a36c319ed78c7\transformed\lifecycle-runtime-compose-release\res
+com.genuine.nsplayer.app-material3-release-46 C:\Users\tusha\.gradle\caches\8.14\transforms\cc43bfec7d3e52ea28f789978a54a73b\transformed\material3-release\res
+com.genuine.nsplayer.app-lifecycle-process-2.8.6-47 C:\Users\tusha\.gradle\caches\8.14\transforms\d596412427f2f2d806138efb8c208229\transformed\lifecycle-process-2.8.6\res
+com.genuine.nsplayer.app-activity-ktx-1.9.3-48 C:\Users\tusha\.gradle\caches\8.14\transforms\da19bda797ed2f34bc85e193c8dec49a\transformed\activity-ktx-1.9.3\res
+com.genuine.nsplayer.app-navigation-common-ktx-2.8.3-49 C:\Users\tusha\.gradle\caches\8.14\transforms\dc26d86c5d333c126f9c64082b03560f\transformed\navigation-common-ktx-2.8.3\res
+com.genuine.nsplayer.app-ui-geometry-release-50 C:\Users\tusha\.gradle\caches\8.14\transforms\dcf2b5b778aab33e1da6c2120d60a22a\transformed\ui-geometry-release\res
+com.genuine.nsplayer.app-lifecycle-runtime-ktx-release-51 C:\Users\tusha\.gradle\caches\8.14\transforms\de07c9481868b054d2df3ccfa53edcb8\transformed\lifecycle-runtime-ktx-release\res
+com.genuine.nsplayer.app-coil-base-2.7.0-52 C:\Users\tusha\.gradle\caches\8.14\transforms\e009c8d986d069b8ad1b24a7fc61df23\transformed\coil-base-2.7.0\res
+com.genuine.nsplayer.app-profileinstaller-1.3.1-53 C:\Users\tusha\.gradle\caches\8.14\transforms\e2d7edc3814eb7a19befe92e5f57b4d8\transformed\profileinstaller-1.3.1\res
+com.genuine.nsplayer.app-ui-tooling-release-54 C:\Users\tusha\.gradle\caches\8.14\transforms\e6d4f46d86de831cd463e3d5ef4bd9cc\transformed\ui-tooling-release\res
+com.genuine.nsplayer.app-lifecycle-viewmodel-release-55 C:\Users\tusha\.gradle\caches\8.14\transforms\e73f87a02073e28d88c76efbc009e158\transformed\lifecycle-viewmodel-release\res
+com.genuine.nsplayer.app-customview-poolingcontainer-1.0.0-56 C:\Users\tusha\.gradle\caches\8.14\transforms\e7bc2f44e92089911a5a9e71090df094\transformed\customview-poolingcontainer-1.0.0\res
+com.genuine.nsplayer.app-ui-tooling-preview-release-57 C:\Users\tusha\.gradle\caches\8.14\transforms\e9c840c99d10d59f46fffe26a0bdb3c0\transformed\ui-tooling-preview-release\res
+com.genuine.nsplayer.app-ui-util-release-58 C:\Users\tusha\.gradle\caches\8.14\transforms\f3966fe15cebe22aa86bb7d9f8d63672\transformed\ui-util-release\res
+com.genuine.nsplayer.app-lifecycle-viewmodel-compose-release-59 C:\Users\tusha\.gradle\caches\8.14\transforms\f4590b82d6ad4b922b267d002d5f6adc\transformed\lifecycle-viewmodel-compose-release\res
+com.genuine.nsplayer.app-material-icons-core-release-60 C:\Users\tusha\.gradle\caches\8.14\transforms\fb773058333258137abad56b51d84102\transformed\material-icons-core-release\res
+com.genuine.nsplayer.app-navigation-runtime-2.8.3-61 C:\Users\tusha\.gradle\caches\8.14\transforms\fec260f89e4b7908bc982d3dbba1fffc\transformed\navigation-runtime-2.8.3\res
+com.genuine.nsplayer.app-ui-tooling-data-release-62 C:\Users\tusha\.gradle\caches\8.14\transforms\ff6451b916cc44cd632fb7831099612f\transformed\ui-tooling-data-release\res
+com.genuine.nsplayer.app-resValues-63 C:\Users\tusha\Downloads\NS Player\app\build\generated\res\resValues\debug
+com.genuine.nsplayer.app-packageDebugResources-64 C:\Users\tusha\Downloads\NS Player\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
+com.genuine.nsplayer.app-packageDebugResources-65 C:\Users\tusha\Downloads\NS Player\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
+com.genuine.nsplayer.app-debug-66 C:\Users\tusha\Downloads\NS Player\app\build\intermediates\merged_res\debug\mergeDebugResources
+com.genuine.nsplayer.app-debug-67 C:\Users\tusha\Downloads\NS Player\app\src\debug\res
+com.genuine.nsplayer.app-main-68 C:\Users\tusha\Downloads\NS Player\app\src\main\res

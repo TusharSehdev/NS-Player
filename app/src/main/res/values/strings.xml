@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NS Player</string>
+    <string name="section_home">Home</string>
+    <string name="section_stream">Stream</string>
+    <string name="section_live_tv">Live TV</string>
+    <string name="section_movies">Movies</string>
+    <string name="section_series">Series</string>
+    <string name="section_playlists">Playlists</string>
+    <string name="section_history">History</string>
+    <string name="section_favorites">Favorites</string>
+    <string name="section_local">Local Media</string>
+    <string name="section_settings">Settings</string>
+
+    <!-- Playlist Management -->
+    <string name="add_playlist">Add Playlist</string>
+    <string name="edit_playlist">Edit Playlist</string>
+    <string name="playlist_name_hint">Playlist Name (e.g. My IPTV)</string>
+    <string name="playlist_url_hint">M3U / M3U8 URL (http:// or https://)</string>
+    <string name="playlist_file">Select Local File</string>
+    <string name="playlist_user_agent">User-Agent (Optional)</string>
+    <string name="refresh_playlist">Refresh Playlist</string>
+    <string name="delete_playlist">Delete Playlist</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="no_playlists">No playlists added yet. Click \'Add Playlist\' to import M3U channels.</string>
+
+    <!-- Channel & Content Browsing -->
+    <string name="search_hint">Search channels, movies, series…</string>
+    <string name="all_categories">All Channels</string>
+    <string name="no_channels">No channels found in this category.</string>
+    <string name="add_to_favorites">Add to Favorites</string>
+    <string name="remove_from_favorites">Remove from Favorites</string>
+    <string name="recently_watched">Recently Watched</string>
+    <string name="continue_watching">Continue Watching</string>
+
+    <!-- Player Controls -->
+    <string name="aspect_ratio">Aspect Ratio</string>
+    <string name="aspect_fit">Fit to Screen</string>
+    <string name="aspect_crop">Crop / Zoom</string>
+    <string name="aspect_stretch">Stretch</string>
+    <string name="aspect_16_9">16:9</string>
+    <string name="aspect_4_3">4:3</string>
+    <string name="audio_tracks">Audio Tracks</string>
+    <string name="subtitle_tracks">Subtitles</string>
+    <string name="subtitles_off">Off</string>
+    <string name="playback_error">Playback Error. Retrying…</string>
+    <string name="buffering">Buffering…</string>
+    <string name="pip_mode">Picture in Picture</string>
+    <string name="sleep_timer">Sleep Timer</string>
+    <string name="sleep_timer_off">Off</string>
+    <string name="sleep_timer_set">Sleep timer set for %d minutes</string>
+
+    <!-- Settings & Security -->
+    <string name="parental_control">Parental Controls</string>
+    <string name="enter_pin">Enter 4-Digit PIN</string>
+    <string name="set_pin">Set Parental PIN</string>
+    <string name="incorrect_pin">Incorrect PIN</string>
+    <string name="lock_category">Lock Adult / Sensitive Groups</string>
+    <string name="theme_selection">Theme Style</string>
+    <string name="hardware_accel">Hardware Acceleration</string>
+    <string name="buffer_size">Buffer Size</string>
+</resources>
