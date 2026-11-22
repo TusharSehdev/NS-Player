@@ -6,6 +6,7 @@ import com.genuine.nsplayer.data.local.PluginRepositoryEntity
 import com.genuine.nsplayer.data.model.PluginCapability
 import com.genuine.nsplayer.data.model.PluginStatus
 import com.genuine.nsplayer.data.repository.PluginRepositoryManager
+import com.lagradost.cloudstream3.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.junit.Assert.*
@@ -122,5 +123,57 @@ class PluginRepositoryManagerTest {
         assertEquals("Global Sports Live", parsed[0].name)
         assertEquals("sports-live", parsed[0].id)
         assertTrue(parsed[0].capabilities.contains(PluginCapability.LIVE_TV))
+    }
+
+    @Test
+    fun testCloudStreamRuntimeCompatibility() = kotlinx.coroutines.runBlocking {
+        // Test custom MainAPI implementation using our runtime
+        val dummyApi = object : com.lagradost.cloudstream3.MainAPI() {
+            override var name = "TestProvider"
+            override var mainUrl = "https://example.com"
+            override var hasMainPage = true
+        }
+
+        val movieResp = dummyApi.newMovieSearchResponse(
+            name = "Inception",
+            url = "/watch/inception",
+            type = com.lagradost.cloudstream3.TvType.Movie
+        ) {
+            year = 2010
+            posterUrl = "https://example.com/poster.jpg"
+        }
+
+        assertEquals("Inception", movieResp.name)
+        assertEquals("https://example.com/watch/inception", movieResp.url)
+        assertEquals(Integer.valueOf(2010), movieResp.year)
+        assertEquals("https://example.com/poster.jpg", movieResp.posterUrl)
+
+        val seriesResp = dummyApi.newTvSeriesLoadResponse(
+            name = "Breaking Bad",
+            url = "https://example.com/bb",
+            type = com.lagradost.cloudstream3.TvType.TvSeries,
+            episodes = listOf(
+                dummyApi.newEpisode("ep1_data") {
+                    name = "Pilot"
+                    episode = 1
+                    season = 1
+                }
+            )
+        )
+
+        assertEquals(1, seriesResp.episodes.size)
+        assertEquals("Pilot", seriesResp.episodes[0].name)
+        assertEquals("ep1_data", seriesResp.episodes[0].data)
+
+        // Test Extractor Link resolution
+        var resolvedLink: com.lagradost.cloudstream3.utils.ExtractorLink? = null
+        com.lagradost.cloudstream3.utils.loadExtractor(
+            url = "https://example.com/stream/master.m3u8",
+            callback = { link -> resolvedLink = link }
+        )
+
+        assertNotNull(resolvedLink)
+        assertEquals("https://example.com/stream/master.m3u8", resolvedLink?.url)
+        assertTrue(resolvedLink!!.isM3u8())
     }
 }

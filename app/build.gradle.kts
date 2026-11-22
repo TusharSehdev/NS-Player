@@ -4,6 +4,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("org.jetbrains.kotlin.plugin.serialization")
     id("com.google.devtools.ksp")
 }
 
@@ -120,6 +121,13 @@ dependencies {
 
     // OkHttp Networking
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // HTML Scraping & JSON Parsing for Universal Plugins
+    implementation("org.jsoup:jsoup:1.17.2")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.17.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

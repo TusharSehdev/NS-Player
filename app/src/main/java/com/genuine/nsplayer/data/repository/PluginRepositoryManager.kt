@@ -24,6 +24,7 @@ class PluginRepositoryManager(
         .build()
 
     val contentResolver = PluginContentResolver(pluginDao, okHttpClient)
+    val universalLoader = UniversalPluginLoader(context, pluginDao, okHttpClient)
 
     fun getAllRepositories(): Flow<List<PluginRepositoryItem>> =
         pluginDao.getAllRepositories().map { list -> list.map { it.toModel() } }
@@ -128,17 +129,23 @@ class PluginRepositoryManager(
                 isEnabled = true
             )
         )
-        // Automatically discover & sync content (Stremio model)
+        // Automatically discover & sync content (Stremio model) via Universal Plugin Loader
         try {
-            contentResolver.syncPlugin(plugin.toModel())
+            val count = universalLoader.syncPlugin(plugin.toModel())
+            if (count > 0) count else contentResolver.syncPlugin(plugin.toModel())
         } catch (_: Exception) {
-            0
+            try {
+                contentResolver.syncPlugin(plugin.toModel())
+            } catch (_: Exception) {
+                0
+            }
         }
     }
 
     suspend fun syncPluginContent(pluginId: String): Int = withContext(Dispatchers.IO) {
         val plugin = pluginDao.getPluginById(pluginId) ?: return@withContext 0
-        contentResolver.syncPlugin(plugin.toModel())
+        val count = universalLoader.syncPlugin(plugin.toModel())
+        if (count > 0) count else contentResolver.syncPlugin(plugin.toModel())
     }
 
     suspend fun updatePlugin(pluginId: String): Int = withContext(Dispatchers.IO) {
@@ -150,7 +157,8 @@ class PluginRepositoryManager(
             )
         )
         try {
-            contentResolver.syncPlugin(plugin.toModel())
+            val count = universalLoader.syncPlugin(plugin.toModel())
+            if (count > 0) count else contentResolver.syncPlugin(plugin.toModel())
         } catch (_: Exception) {
             0
         }
@@ -175,11 +183,13 @@ class PluginRepositoryManager(
         episodeId: String? = null,
         preferredQuality: String = "720"
     ): ResolvedStream = withContext(Dispatchers.IO) {
-        contentResolver.resolveStream(media, episodeId, preferredQuality)
+        val universalStream = universalLoader.resolveStream(media, episodeId, preferredQuality)
+        universalStream ?: contentResolver.resolveStream(media, episodeId, preferredQuality)
     }
 
     suspend fun fetchEpisodes(media: PluginMediaItem): List<PluginEpisode> = withContext(Dispatchers.IO) {
-        contentResolver.fetchEpisodes(media)
+        val eps = universalLoader.fetchEpisodes(media)
+        if (eps.isNotEmpty()) eps else contentResolver.fetchEpisodes(media)
     }
 
     suspend fun getMediaCountForPlugin(pluginId: String): Int = withContext(Dispatchers.IO) {

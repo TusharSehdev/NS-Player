@@ -8,8 +8,14 @@ import coil.memory.MemoryCache
 
 class NSPlayerApplication : Application(), ImageLoaderFactory {
 
+    companion object {
+        lateinit var instance: NSPlayerApplication
+            private set
+    }
+
     override fun onCreate() {
         super.onCreate()
+        instance = this
     }
 
     override fun newImageLoader(): ImageLoader {
