@@ -17,14 +17,20 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.OptIn
 import androidx.compose.animation.*
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -39,13 +45,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -63,9 +76,27 @@ import com.genuine.nsplayer.ui.theme.*
 import com.genuine.nsplayer.ui.viewmodel.PlayerViewModel
 import kotlinx.coroutines.delay
 
+/**
+ * Bridge for Android TV remote D-pad and media key events
+ */
+class RemoteControlState {
+    var onDpadCenter: (() -> Boolean)? = null
+    var onDpadUp: (() -> Boolean)? = null
+    var onDpadDown: (() -> Boolean)? = null
+    var onDpadLeft: (() -> Boolean)? = null
+    var onDpadRight: (() -> Boolean)? = null
+    var onBackPressed: (() -> Boolean)? = null
+    var onVolumeUp: (() -> Boolean)? = null
+    var onVolumeDown: (() -> Boolean)? = null
+    var onVolumeMute: (() -> Boolean)? = null
+    var onMenu: (() -> Boolean)? = null
+    var onAnyKey: (() -> Unit)? = null
+}
+
 class PlayerActivity : ComponentActivity() {
 
     private val playerViewModel: PlayerViewModel by viewModels()
+    val remoteControlState = RemoteControlState()
 
     companion object {
         const val EXTRA_STREAM_URL = "extra_stream_url"
@@ -99,7 +130,7 @@ class PlayerActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        // Lock to landscape on phones/tablets for optimal cinematic viewing
+        // Lock to landscape on phones/tablets for optimal viewing
         val isTV = DeviceDetector.getDeviceMode(this) == DeviceMode.TELEVISION
         if (!isTV) {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
@@ -136,6 +167,7 @@ class PlayerActivity : ComponentActivity() {
             NSPlayerTheme {
                 PlayerScreen(
                     viewModel = playerViewModel,
+                    remoteControlState = remoteControlState,
                     onEnterPip = { enterPipMode() },
                     onClose = { finish() }
                 )
@@ -144,29 +176,69 @@ class PlayerActivity : ComponentActivity() {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        return when (keyCode) {
+        remoteControlState.onAnyKey?.invoke()
+
+        when (keyCode) {
+            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER -> {
+                if (remoteControlState.onDpadCenter?.invoke() == true) return true
+            }
+            KeyEvent.KEYCODE_DPAD_DOWN -> {
+                if (remoteControlState.onDpadDown?.invoke() == true) return true
+            }
+            KeyEvent.KEYCODE_DPAD_UP -> {
+                if (remoteControlState.onDpadUp?.invoke() == true) return true
+            }
+            KeyEvent.KEYCODE_DPAD_LEFT -> {
+                if (remoteControlState.onDpadLeft?.invoke() == true) return true
+            }
+            KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                if (remoteControlState.onDpadRight?.invoke() == true) return true
+            }
+            KeyEvent.KEYCODE_BACK -> {
+                if (remoteControlState.onBackPressed?.invoke() == true) return true
+            }
+            KeyEvent.KEYCODE_VOLUME_UP -> {
+                if (remoteControlState.onVolumeUp?.invoke() == true) return true
+            }
+            KeyEvent.KEYCODE_VOLUME_DOWN -> {
+                if (remoteControlState.onVolumeDown?.invoke() == true) return true
+            }
+            KeyEvent.KEYCODE_VOLUME_MUTE -> {
+                if (remoteControlState.onVolumeMute?.invoke() == true) return true
+            }
+            KeyEvent.KEYCODE_MENU, KeyEvent.KEYCODE_INFO, KeyEvent.KEYCODE_GUIDE -> {
+                if (remoteControlState.onMenu?.invoke() == true) return true
+            }
+            KeyEvent.KEYCODE_CHANNEL_UP, KeyEvent.KEYCODE_MEDIA_NEXT, KeyEvent.KEYCODE_PAGE_UP -> {
+                playerViewModel.playNextChannel()
+                return true
+            }
+            KeyEvent.KEYCODE_CHANNEL_DOWN, KeyEvent.KEYCODE_MEDIA_PREVIOUS, KeyEvent.KEYCODE_PAGE_DOWN -> {
+                playerViewModel.playPreviousChannel()
+                return true
+            }
             KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
                 playerViewModel.mediaEngine.togglePlayPause()
-                true
+                return true
+            }
+            KeyEvent.KEYCODE_MEDIA_PLAY -> {
+                playerViewModel.mediaEngine.exoPlayer.play()
+                return true
+            }
+            KeyEvent.KEYCODE_MEDIA_PAUSE -> {
+                playerViewModel.mediaEngine.exoPlayer.pause()
+                return true
             }
             KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> {
                 playerViewModel.mediaEngine.seekRelative(10_000)
-                true
+                return true
             }
             KeyEvent.KEYCODE_MEDIA_REWIND -> {
                 playerViewModel.mediaEngine.seekRelative(-10_000)
-                true
+                return true
             }
-            KeyEvent.KEYCODE_CHANNEL_UP, KeyEvent.KEYCODE_MEDIA_NEXT -> {
-                playerViewModel.playNextChannel()
-                true
-            }
-            KeyEvent.KEYCODE_CHANNEL_DOWN, KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
-                playerViewModel.playPreviousChannel()
-                true
-            }
-            else -> super.onKeyDown(keyCode, event)
         }
+        return super.onKeyDown(keyCode, event)
     }
 
     private fun enterPipMode() {
@@ -192,6 +264,7 @@ class PlayerActivity : ComponentActivity() {
 @Composable
 fun PlayerScreen(
     viewModel: PlayerViewModel,
+    remoteControlState: RemoteControlState,
     onEnterPip: () -> Unit,
     onClose: () -> Unit
 ) {
@@ -208,24 +281,24 @@ fun PlayerScreen(
     val subtitleTracks by mediaEngine.subtitleTracks.collectAsState()
     val sleepTimer by viewModel.sleepTimerMinutes.collectAsState()
 
-    // Audio & Volume Management (NO GESTURES - MANUAL CONTROLS ONLY)
+    // Audio & Volume Management
     val audioManager = remember { context.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
     val maxVolume = remember { audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC).coerceAtLeast(1) }
     var currentVolume by remember { mutableStateOf(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)) }
     var lastNonZeroVolume by remember { mutableStateOf(if (currentVolume > 0) currentVolume else (maxVolume / 2)) }
 
-    // Brightness Management (NO GESTURES - MANUAL CONTROLS ONLY)
+    // Brightness Management
     var currentBrightness by remember {
         val cur = activity?.window?.attributes?.screenBrightness ?: 0.5f
         mutableStateOf(if (cur < 0.05f) 0.5f else cur)
     }
 
-    // HUD Notification State (for on-screen feedback when manual buttons are pressed)
+    // HUD Notification State
     var hudText by remember { mutableStateOf<String?>(null) }
     var hudIcon by remember { mutableStateOf(Icons.AutoMirrored.Filled.VolumeUp) }
     var hudProgress by remember { mutableStateOf(0.5f) }
 
-    fun triggerHud(text: String, icon: androidx.compose.ui.graphics.vector.ImageVector, progress: Float) {
+    fun triggerHud(text: String, icon: ImageVector, progress: Float) {
         hudText = text
         hudIcon = icon
         hudProgress = progress.coerceIn(0f, 1f)
@@ -272,11 +345,25 @@ fun PlayerScreen(
     // Fast seek visual animation state
     var fastSeekText by remember { mutableStateOf<String?>(null) }
 
-    // Auto-hide controls after 6 seconds of inactivity during playback
-    LaunchedEffect(showControls, isPlaying) {
-        if (showControls && isPlaying) {
+    // Activity key & focus management
+    var autoHideCounter by remember { mutableIntStateOf(0) }
+    val playButtonFocusRequester = remember { FocusRequester() }
+
+    // Auto-hide controls after 6 seconds of inactivity (resets on any user interaction)
+    LaunchedEffect(showControls, isPlaying, autoHideCounter) {
+        if (showControls && isPlaying && !showChannelDrawer && !showTrackDialog && !showSleepTimerDialog) {
             delay(6000)
             showControls = false
+        }
+    }
+
+    // Auto-focus on primary play control when OSD appears
+    LaunchedEffect(showControls) {
+        if (showControls) {
+            delay(80)
+            try {
+                playButtonFocusRequester.requestFocus()
+            } catch (_: Exception) {}
         }
     }
 
@@ -288,12 +375,121 @@ fun PlayerScreen(
         }
     }
 
+    // Bind hardware remote controller state to player state
+    DisposableEffect(remoteControlState, showControls, showChannelDrawer, showTrackDialog, showSleepTimerDialog) {
+        remoteControlState.onAnyKey = {
+            autoHideCounter++
+        }
+
+        remoteControlState.onDpadCenter = {
+            if (!showControls && !showChannelDrawer && !showTrackDialog && !showSleepTimerDialog) {
+                showControls = true
+                true
+            } else {
+                false // Handled by currently focused UI element
+            }
+        }
+
+        remoteControlState.onDpadDown = {
+            if (!showControls && !showChannelDrawer && !showTrackDialog && !showSleepTimerDialog) {
+                showChannelDrawer = true
+                true
+            } else {
+                false
+            }
+        }
+
+        remoteControlState.onDpadUp = {
+            if (!showControls && !showChannelDrawer && !showTrackDialog && !showSleepTimerDialog) {
+                showControls = true
+                true
+            } else {
+                false
+            }
+        }
+
+        remoteControlState.onDpadLeft = {
+            if (!showControls && !showChannelDrawer && !showTrackDialog && !showSleepTimerDialog) {
+                mediaEngine.seekRelative(-10_000)
+                fastSeekText = "-10s"
+                true
+            } else {
+                false
+            }
+        }
+
+        remoteControlState.onDpadRight = {
+            if (!showControls && !showChannelDrawer && !showTrackDialog && !showSleepTimerDialog) {
+                mediaEngine.seekRelative(10_000)
+                fastSeekText = "+10s"
+                true
+            } else {
+                false
+            }
+        }
+
+        remoteControlState.onBackPressed = {
+            when {
+                showTrackDialog -> {
+                    showTrackDialog = false
+                    true
+                }
+                showSleepTimerDialog -> {
+                    showSleepTimerDialog = false
+                    true
+                }
+                showChannelDrawer -> {
+                    showChannelDrawer = false
+                    true
+                }
+                showControls -> {
+                    showControls = false
+                    true
+                }
+                else -> false // Let system exit activity
+            }
+        }
+
+        remoteControlState.onVolumeUp = {
+            setVolume(currentVolume + 1)
+            true
+        }
+
+        remoteControlState.onVolumeDown = {
+            setVolume(currentVolume - 1)
+            true
+        }
+
+        remoteControlState.onVolumeMute = {
+            toggleMute()
+            true
+        }
+
+        remoteControlState.onMenu = {
+            showControls = !showControls
+            true
+        }
+
+        onDispose {
+            remoteControlState.onAnyKey = null
+            remoteControlState.onDpadCenter = null
+            remoteControlState.onDpadDown = null
+            remoteControlState.onDpadUp = null
+            remoteControlState.onDpadLeft = null
+            remoteControlState.onDpadRight = null
+            remoteControlState.onBackPressed = null
+            remoteControlState.onVolumeUp = null
+            remoteControlState.onVolumeDown = null
+            remoteControlState.onVolumeMute = null
+            remoteControlState.onMenu = null
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
             .pointerInput(Unit) {
-                // Strictly tap & double-tap only: NO VERTICAL DRAG GESTURES for volume or brightness
                 detectTapGestures(
                     onTap = { showControls = !showControls },
                     onDoubleTap = { offset ->
@@ -366,8 +562,8 @@ fun PlayerScreen(
             ) {
                 Surface(
                     shape = RoundedCornerShape(14.dp),
-                    color = Color.Black.copy(alpha = 0.8f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, NSBorder)
+                    color = Color.Black.copy(alpha = 0.85f),
+                    border = BorderStroke(1.dp, NSBorder)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 24.dp, vertical = 14.dp),
@@ -391,7 +587,7 @@ fun PlayerScreen(
             }
         }
 
-        // Floating Center HUD for Manual Volume & Brightness Feedback
+        // Floating Center HUD for Volume / Brightness / Aspect Feedback
         if (hudText != null) {
             Box(
                 modifier = Modifier
@@ -402,11 +598,11 @@ fun PlayerScreen(
                 Surface(
                     shape = RoundedCornerShape(20.dp),
                     color = Color(0xDD12151F),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)),
-                    shadowElevation = 8.dp
+                    border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)),
+                    shadowElevation = 10.dp
                 ) {
                     Column(
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+                        modifier = Modifier.padding(horizontal = 22.dp, vertical = 10.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -436,6 +632,14 @@ fun PlayerScreen(
 
         // Playback Error Banner
         if (error != null) {
+            val retryFocusRequester = remember { FocusRequester() }
+            LaunchedEffect(error) {
+                delay(100)
+                try {
+                    retryFocusRequester.requestFocus()
+                } catch (_: Exception) {}
+            }
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -445,7 +649,7 @@ fun PlayerScreen(
                 Surface(
                     shape = RoundedCornerShape(16.dp),
                     color = Color(0xF01A0B10),
-                    border = androidx.compose.foundation.BorderStroke(1.5.dp, NSError),
+                    border = BorderStroke(1.5.dp, NSError),
                     modifier = Modifier.widthIn(max = 480.dp)
                 ) {
                     Column(
@@ -463,15 +667,12 @@ fun PlayerScreen(
                             lineHeight = 18.sp
                         )
                         Spacer(Modifier.height(18.dp))
-                        Button(
+                        TvTextButton(
+                            text = "Retry Connection",
+                            icon = Icons.Default.Refresh,
                             onClick = { mediaEngine.retryPlayback() },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                            shape = RoundedCornerShape(10.dp)
-                        ) {
-                            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text("Retry Connection")
-                        }
+                            focusRequester = retryFocusRequester
+                        )
                     }
                 }
             }
@@ -520,21 +721,13 @@ fun PlayerScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = Color(0x66161B26),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, NSBorder),
-                            modifier = Modifier.size(42.dp)
-                        ) {
-                            IconButton(onClick = onClose) {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Back",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
+                        TvIconButton(
+                            icon = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            size = 42.dp,
+                            iconSize = 22.dp,
+                            onClick = onClose
+                        )
 
                         Spacer(Modifier.width(14.dp))
 
@@ -542,7 +735,7 @@ fun PlayerScreen(
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
                                 color = Color(0x88090A0F),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, NSBorder),
+                                border = BorderStroke(1.dp, NSBorder),
                                 modifier = Modifier.size(44.dp)
                             ) {
                                 AsyncImage(
@@ -579,7 +772,7 @@ fun PlayerScreen(
                                         color = Color.White,
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                     )
                                 }
                             }
@@ -593,77 +786,49 @@ fun PlayerScreen(
                         }
                     }
 
-                    // Right: Quick Function Icons
+                    // Right: Quick Function Buttons
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         // Aspect Ratio Toggle
-                        Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = Color(0x66161B26),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, NSBorder)
-                        ) {
-                            TextButton(
-                                onClick = {
-                                    val nextMode = when (aspectRatioMode) {
-                                        AspectRatioMode.FIT -> AspectRatioMode.SIXTEEN_NINE
-                                        AspectRatioMode.SIXTEEN_NINE -> AspectRatioMode.CROP
-                                        AspectRatioMode.CROP -> AspectRatioMode.STRETCH
-                                        AspectRatioMode.STRETCH -> AspectRatioMode.FOUR_THREE
-                                        AspectRatioMode.FOUR_THREE -> AspectRatioMode.FIT
-                                    }
-                                    mediaEngine.setAspectRatio(nextMode)
-                                    triggerHud("Aspect: $nextMode", Icons.Default.AspectRatio, 1.0f)
-                                },
-                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
-                            ) {
-                                Icon(Icons.Default.AspectRatio, contentDescription = "Aspect", tint = Color.White, modifier = Modifier.size(18.dp))
-                                Spacer(Modifier.width(6.dp))
-                                Text(aspectRatioMode.name, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        TvTextButton(
+                            text = aspectRatioMode.name,
+                            icon = Icons.Default.AspectRatio,
+                            onClick = {
+                                val nextMode = when (aspectRatioMode) {
+                                    AspectRatioMode.FIT -> AspectRatioMode.SIXTEEN_NINE
+                                    AspectRatioMode.SIXTEEN_NINE -> AspectRatioMode.CROP
+                                    AspectRatioMode.CROP -> AspectRatioMode.STRETCH
+                                    AspectRatioMode.STRETCH -> AspectRatioMode.FOUR_THREE
+                                    AspectRatioMode.FOUR_THREE -> AspectRatioMode.FIT
+                                }
+                                mediaEngine.setAspectRatio(nextMode)
+                                triggerHud("Aspect: $nextMode", Icons.Default.AspectRatio, 1.0f)
                             }
-                        }
+                        )
 
                         // Tracks (Audio / Subtitles)
-                        Surface(
-                            shape = CircleShape,
-                            color = Color(0x66161B26),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, NSBorder),
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            IconButton(onClick = { showTrackDialog = true }) {
-                                Icon(Icons.Default.Subtitles, contentDescription = "Tracks", tint = Color.White, modifier = Modifier.size(19.dp))
-                            }
-                        }
+                        TvIconButton(
+                            icon = Icons.Default.Subtitles,
+                            contentDescription = "Audio and Subtitles",
+                            onClick = { showTrackDialog = true }
+                        )
 
                         // Sleep Timer
-                        Surface(
-                            shape = CircleShape,
-                            color = if (sleepTimer != null) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f) else Color(0x66161B26),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, if (sleepTimer != null) MaterialTheme.colorScheme.primary else NSBorder),
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            IconButton(onClick = { showSleepTimerDialog = true }) {
-                                Icon(
-                                    Icons.Default.Timer,
-                                    contentDescription = "Sleep Timer",
-                                    tint = if (sleepTimer != null) MaterialTheme.colorScheme.primary else Color.White,
-                                    modifier = Modifier.size(19.dp)
-                                )
-                            }
-                        }
+                        TvIconButton(
+                            icon = Icons.Default.Timer,
+                            contentDescription = "Sleep Timer",
+                            tint = if (sleepTimer != null) MaterialTheme.colorScheme.primary else Color.White,
+                            onClick = { showSleepTimerDialog = true }
+                        )
 
-                        // Picture in Picture
-                        Surface(
-                            shape = CircleShape,
-                            color = Color(0x66161B26),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, NSBorder),
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            IconButton(onClick = onEnterPip) {
-                                Icon(Icons.Default.PictureInPicture, contentDescription = "PiP", tint = Color.White, modifier = Modifier.size(19.dp))
-                            }
-                        }
+                        // Picture-in-Picture
+                        TvIconButton(
+                            icon = Icons.Default.PictureInPicture,
+                            contentDescription = "Picture in Picture",
+                            onClick = onEnterPip
+                        )
                     }
                 }
 
@@ -674,52 +839,41 @@ fun PlayerScreen(
                     horizontalArrangement = Arrangement.spacedBy(36.dp)
                 ) {
                     // Rewind 10s Button
-                    Surface(
-                        shape = CircleShape,
-                        color = Color(0x8812151F),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, NSBorder),
-                        modifier = Modifier.size(54.dp)
-                    ) {
-                        IconButton(onClick = {
+                    TvIconButton(
+                        icon = Icons.Default.Replay10,
+                        contentDescription = "Rewind 10s",
+                        size = 56.dp,
+                        iconSize = 30.dp,
+                        onClick = {
                             mediaEngine.seekRelative(-10_000)
                             fastSeekText = "-10s"
-                        }) {
-                            Icon(Icons.Default.Replay10, contentDescription = "Rewind 10s", tint = Color.White, modifier = Modifier.size(28.dp))
                         }
-                    }
+                    )
 
-                    // Main Glassmorphic Play/Pause Button
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
-                        border = androidx.compose.foundation.BorderStroke(2.dp, Color.White.copy(alpha = 0.6f)),
-                        shadowElevation = 12.dp,
-                        modifier = Modifier.size(76.dp)
-                    ) {
-                        IconButton(onClick = { mediaEngine.togglePlayPause() }) {
-                            Icon(
-                                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                contentDescription = if (isPlaying) "Pause" else "Play",
-                                tint = Color.White,
-                                modifier = Modifier.size(44.dp)
-                            )
-                        }
-                    }
+                    // Main Glassmorphic Play/Pause Button (Primary initial focus on TV)
+                    TvIconButton(
+                        icon = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = if (isPlaying) "Pause" else "Play",
+                        size = 80.dp,
+                        iconSize = 46.dp,
+                        focusedBorderColor = Color.White,
+                        focusedBackgroundColor = MaterialTheme.colorScheme.primary,
+                        defaultBackgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
+                        focusRequester = playButtonFocusRequester,
+                        onClick = { mediaEngine.togglePlayPause() }
+                    )
 
                     // Forward 10s Button
-                    Surface(
-                        shape = CircleShape,
-                        color = Color(0x8812151F),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, NSBorder),
-                        modifier = Modifier.size(54.dp)
-                    ) {
-                        IconButton(onClick = {
+                    TvIconButton(
+                        icon = Icons.Default.Forward10,
+                        contentDescription = "Forward 10s",
+                        size = 56.dp,
+                        iconSize = 30.dp,
+                        onClick = {
                             mediaEngine.seekRelative(10_000)
                             fastSeekText = "+10s"
-                        }) {
-                            Icon(Icons.Default.Forward10, contentDescription = "Forward 10s", tint = Color.White, modifier = Modifier.size(28.dp))
                         }
-                    }
+                    )
                 }
 
                 // Bottom Controls Cluster: Manual Volume & Brightness + Channels & Zap
@@ -729,139 +883,45 @@ fun PlayerScreen(
                         .align(Alignment.BottomCenter)
                         .padding(horizontal = 20.dp, vertical = 14.dp)
                 ) {
-                    // MANUAL ON-SCREEN CONTROLS BAR: Brightness & Volume (NO GESTURES)
+                    // MANUAL ON-SCREEN CONTROLS: Remote D-pad + Touch Enabled
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(14.dp))
-                            .background(Color(0xDD12151F))
+                            .background(Color(0xEE12151F))
                             .border(1.dp, NSBorder, RoundedCornerShape(14.dp))
                             .padding(horizontal = 14.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Left Section: Manual Brightness Control
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
+                        TvLevelControl(
+                            label = "Brightness",
+                            icon = if (currentBrightness < 0.4f) Icons.Default.BrightnessLow else if (currentBrightness < 0.75f) Icons.Default.BrightnessMedium else Icons.Default.BrightnessHigh,
+                            tint = NSWarning,
+                            currentFraction = currentBrightness,
+                            displayText = "${(currentBrightness * 100).toInt()}%",
+                            onStepDown = { setBrightness(currentBrightness - 0.10f) },
+                            onStepUp = { setBrightness(currentBrightness + 0.10f) },
+                            onSetFraction = { setBrightness(it) },
                             modifier = Modifier.weight(1f)
-                        ) {
-                            val briPct = (currentBrightness * 100).toInt()
-                            val briIcon = if (briPct < 40) Icons.Default.BrightnessLow else if (briPct < 75) Icons.Default.BrightnessMedium else Icons.Default.BrightnessHigh
-                            Icon(briIcon, contentDescription = null, tint = NSWarning, modifier = Modifier.size(20.dp))
-                            Spacer(Modifier.width(8.dp))
+                        )
 
-                            // Step Down [-] Button
-                            Surface(
-                                shape = CircleShape,
-                                color = Color(0x55262E42),
-                                modifier = Modifier.size(30.dp)
-                            ) {
-                                IconButton(onClick = { setBrightness(currentBrightness - 0.10f) }) {
-                                    Icon(Icons.Default.Remove, contentDescription = "Brightness Down", tint = Color.White, modifier = Modifier.size(16.dp))
-                                }
-                            }
-
-                            // Interactive Slider
-                            Slider(
-                                value = currentBrightness,
-                                onValueChange = { setBrightness(it) },
-                                valueRange = 0.05f..1.0f,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(horizontal = 8.dp),
-                                colors = SliderDefaults.colors(
-                                    thumbColor = NSWarning,
-                                    activeTrackColor = NSWarning,
-                                    inactiveTrackColor = Color.DarkGray
-                                )
-                            )
-
-                            // Step Up [+] Button
-                            Surface(
-                                shape = CircleShape,
-                                color = Color(0x55262E42),
-                                modifier = Modifier.size(30.dp)
-                            ) {
-                                IconButton(onClick = { setBrightness(currentBrightness + 0.10f) }) {
-                                    Icon(Icons.Default.Add, contentDescription = "Brightness Up", tint = Color.White, modifier = Modifier.size(16.dp))
-                                }
-                            }
-
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                text = "$briPct%",
-                                color = Color.White,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.width(36.dp)
-                            )
-                        }
-
-                        Spacer(Modifier.width(20.dp))
+                        Spacer(Modifier.width(24.dp))
 
                         // Right Section: Manual Volume Control
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
+                        TvLevelControl(
+                            label = "Volume",
+                            icon = if (currentVolume == 0) Icons.AutoMirrored.Filled.VolumeMute else if ((currentVolume * 100) / maxVolume < 50) Icons.AutoMirrored.Filled.VolumeDown else Icons.AutoMirrored.Filled.VolumeUp,
+                            tint = MaterialTheme.colorScheme.primary,
+                            currentFraction = currentVolume.toFloat() / maxVolume.toFloat(),
+                            displayText = "${(currentVolume * 100) / maxVolume}%",
+                            onIconClick = { toggleMute() },
+                            onStepDown = { setVolume(currentVolume - 1) },
+                            onStepUp = { setVolume(currentVolume + 1) },
+                            onSetFraction = { fraction -> setVolume((fraction * maxVolume).toInt()) },
                             modifier = Modifier.weight(1f)
-                        ) {
-                            val volPct = (currentVolume * 100) / maxVolume
-                            val volIcon = if (currentVolume == 0) Icons.AutoMirrored.Filled.VolumeMute else if (volPct < 50) Icons.AutoMirrored.Filled.VolumeDown else Icons.AutoMirrored.Filled.VolumeUp
-
-                            // Mute Toggle Icon Button
-                            IconButton(onClick = { toggleMute() }, modifier = Modifier.size(28.dp)) {
-                                Icon(volIcon, contentDescription = "Mute", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                            }
-                            Spacer(Modifier.width(6.dp))
-
-                            // Step Down [-] Button
-                            Surface(
-                                shape = CircleShape,
-                                color = Color(0x55262E42),
-                                modifier = Modifier.size(30.dp)
-                            ) {
-                                IconButton(onClick = { setVolume(currentVolume - 1) }) {
-                                    Icon(Icons.Default.Remove, contentDescription = "Volume Down", tint = Color.White, modifier = Modifier.size(16.dp))
-                                }
-                            }
-
-                            // Interactive Volume Slider
-                            Slider(
-                                value = currentVolume.toFloat() / maxVolume.toFloat(),
-                                onValueChange = { fraction ->
-                                    val newVol = (fraction * maxVolume).toInt()
-                                    setVolume(newVol)
-                                },
-                                valueRange = 0f..1f,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(horizontal = 8.dp),
-                                colors = SliderDefaults.colors(
-                                    thumbColor = MaterialTheme.colorScheme.primary,
-                                    activeTrackColor = MaterialTheme.colorScheme.primary,
-                                    inactiveTrackColor = Color.DarkGray
-                                )
-                            )
-
-                            // Step Up [+] Button
-                            Surface(
-                                shape = CircleShape,
-                                color = Color(0x55262E42),
-                                modifier = Modifier.size(30.dp)
-                            ) {
-                                IconButton(onClick = { setVolume(currentVolume + 1) }) {
-                                    Icon(Icons.Default.Add, contentDescription = "Volume Up", tint = Color.White, modifier = Modifier.size(16.dp))
-                                }
-                            }
-
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                text = "$volPct%",
-                                color = Color.White,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.width(36.dp)
-                            )
-                        }
+                        )
                     }
 
                     Spacer(Modifier.height(10.dp))
@@ -875,57 +935,40 @@ fun PlayerScreen(
                         // Channel Switching Controls
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             // Previous Channel Button
-                            Button(
-                                onClick = { viewModel.playPreviousChannel() },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0x99161B26)),
-                                shape = RoundedCornerShape(10.dp),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, NSBorder),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                            ) {
-                                Icon(Icons.Default.SkipPrevious, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
-                                Spacer(Modifier.width(4.dp))
-                                Text("Prev", fontSize = 12.sp, color = Color.White)
-                            }
+                            TvTextButton(
+                                text = "Prev",
+                                icon = Icons.Default.SkipPrevious,
+                                onClick = { viewModel.playPreviousChannel() }
+                            )
 
                             // Next Channel Button
-                            Button(
-                                onClick = { viewModel.playNextChannel() },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0x99161B26)),
-                                shape = RoundedCornerShape(10.dp),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, NSBorder),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                            ) {
-                                Text("Next", fontSize = 12.sp, color = Color.White)
-                                Spacer(Modifier.width(4.dp))
-                                Icon(Icons.Default.SkipNext, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
-                            }
+                            TvTextButton(
+                                text = "Next",
+                                icon = Icons.Default.SkipNext,
+                                onClick = { viewModel.playNextChannel() }
+                            )
 
                             // In-Player Quick Channels Drawer Button
-                            Button(
-                                onClick = { showChannelDrawer = true },
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)),
-                                shape = RoundedCornerShape(10.dp),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)),
-                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
-                            ) {
-                                Icon(Icons.Default.Tv, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
-                                Spacer(Modifier.width(6.dp))
-                                Text("Channels", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                            }
+                            TvTextButton(
+                                text = "Channels",
+                                icon = Icons.Default.Tv,
+                                textColor = MaterialTheme.colorScheme.primary,
+                                onClick = { showChannelDrawer = true }
+                            )
 
                             // Favorite Toggle
                             channel?.let { ch ->
-                                IconButton(onClick = { viewModel.toggleFavorite(ch) }) {
-                                    Icon(
-                                        imageVector = if (ch.isFavorite) Icons.Filled.Star else Icons.Outlined.StarOutline,
-                                        contentDescription = "Favorite",
-                                        tint = if (ch.isFavorite) NSGold else Color.White.copy(alpha = 0.7f),
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
+                                TvIconButton(
+                                    icon = if (ch.isFavorite) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                                    contentDescription = "Favorite",
+                                    tint = if (ch.isFavorite) NSGold else Color.White.copy(alpha = 0.7f),
+                                    size = 40.dp,
+                                    iconSize = 22.dp,
+                                    onClick = { viewModel.toggleFavorite(ch) }
+                                )
                             }
                         }
 
@@ -938,7 +981,7 @@ fun PlayerScreen(
                                 Surface(
                                     shape = RoundedCornerShape(6.dp),
                                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
                                 ) {
                                     Text(
                                         text = "Sleep: ${sleepTimer}m",
@@ -953,7 +996,7 @@ fun PlayerScreen(
                             Surface(
                                 shape = RoundedCornerShape(6.dp),
                                 color = Color(0x66161B26),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, NSBorder)
+                                border = BorderStroke(1.dp, NSBorder)
                             ) {
                                 Text(
                                     text = "HLS Live • Media3 ExoPlayer",
@@ -969,7 +1012,7 @@ fun PlayerScreen(
         }
     }
 
-    // In-Player Quick Channels Drawer
+    // In-Player Quick Channels Drawer (Fully D-Pad Remote Navigable)
     if (showChannelDrawer) {
         InPlayerChannelDrawer(
             channels = playlistChannels,
@@ -982,7 +1025,7 @@ fun PlayerScreen(
         )
     }
 
-    // Audio & Subtitle Tracks Dialog
+    // Audio & Subtitle Tracks Dialog (Remote Navigable)
     if (showTrackDialog) {
         TrackSelectionDialog(
             audioTracks = audioTracks,
@@ -993,7 +1036,7 @@ fun PlayerScreen(
         )
     }
 
-    // Sleep Timer Dialog
+    // Sleep Timer Dialog (Remote Navigable)
     if (showSleepTimerDialog) {
         SleepTimerDialog(
             currentMinutes = sleepTimer,
@@ -1006,6 +1049,255 @@ fun PlayerScreen(
     }
 }
 
+/**
+ * High-contrast, focus-scaled icon button engineered for Android TV remote D-pads and touch
+ */
+@Composable
+fun TvIconButton(
+    icon: ImageVector,
+    contentDescription: String?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    shape: Shape = CircleShape,
+    size: Dp = 42.dp,
+    iconSize: Dp = 22.dp,
+    tint: Color = Color.White,
+    focusedBorderColor: Color = MaterialTheme.colorScheme.primary,
+    focusedBackgroundColor: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
+    defaultBackgroundColor: Color = Color(0x66161B26),
+    focusRequester: FocusRequester? = null
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    val scale by animateFloatAsState(
+        targetValue = if (isFocused) 1.15f else 1.0f,
+        animationSpec = tween(durationMillis = 150),
+        label = "BtnScale"
+    )
+
+    Surface(
+        shape = shape,
+        color = if (isFocused) focusedBackgroundColor else defaultBackgroundColor,
+        border = BorderStroke(if (isFocused) 2.5.dp else 1.dp, if (isFocused) focusedBorderColor else NSBorder),
+        shadowElevation = if (isFocused) 12.dp else 2.dp,
+        modifier = modifier
+            .size(size)
+            .scale(scale)
+            .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
+            .focusable(interactionSource = interactionSource)
+            .onKeyEvent { event ->
+                if (event.type == KeyEventType.KeyUp && (event.key == Key.DirectionCenter || event.key == Key.Enter || event.key == Key.NumPadEnter)) {
+                    onClick()
+                    true
+                } else false
+            }
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = if (isFocused) Color.White else tint,
+                modifier = Modifier.size(iconSize)
+            )
+        }
+    }
+}
+
+/**
+ * Focus-highlighted text button for TV remotes
+ */
+@Composable
+fun TvTextButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    shape: Shape = RoundedCornerShape(10.dp),
+    textColor: Color = Color.White,
+    focusRequester: FocusRequester? = null
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    val scale by animateFloatAsState(
+        targetValue = if (isFocused) 1.1f else 1.0f,
+        animationSpec = tween(durationMillis = 150),
+        label = "TextBtnScale"
+    )
+
+    Surface(
+        shape = shape,
+        color = if (isFocused) MaterialTheme.colorScheme.primary.copy(alpha = 0.35f) else Color(0x66161B26),
+        border = BorderStroke(if (isFocused) 2.5.dp else 1.dp, if (isFocused) MaterialTheme.colorScheme.primary else NSBorder),
+        shadowElevation = if (isFocused) 10.dp else 2.dp,
+        modifier = modifier
+            .scale(scale)
+            .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
+            .focusable(interactionSource = interactionSource)
+            .onKeyEvent { event ->
+                if (event.type == KeyEventType.KeyUp && (event.key == Key.DirectionCenter || event.key == Key.Enter || event.key == Key.NumPadEnter)) {
+                    onClick()
+                    true
+                } else false
+            }
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = if (isFocused) MaterialTheme.colorScheme.primary else textColor,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.width(6.dp))
+            }
+            Text(
+                text = text,
+                color = if (isFocused) Color.White else textColor,
+                fontSize = 12.sp,
+                fontWeight = if (isFocused) FontWeight.Bold else FontWeight.Medium
+            )
+        }
+    }
+}
+
+/**
+ * Universal Level Control (Volume & Brightness):
+ * - Operated on TV Remote by focusing on [-]/[+] buttons or focusing on the bar and pressing D-pad Left/Right!
+ * - Operated on Mobile by touch tapping or dragging!
+ */
+@Composable
+fun TvLevelControl(
+    label: String,
+    icon: ImageVector,
+    tint: Color,
+    currentFraction: Float,
+    displayText: String,
+    onStepDown: () -> Unit,
+    onStepUp: () -> Unit,
+    onSetFraction: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+    onIconClick: (() -> Unit)? = null
+) {
+    val barInteractionSource = remember { MutableInteractionSource() }
+    val isBarFocused by barInteractionSource.collectIsFocusedAsState()
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+    ) {
+        // Icon / Mute Button
+        if (onIconClick != null) {
+            TvIconButton(
+                icon = icon,
+                contentDescription = label,
+                size = 32.dp,
+                iconSize = 20.dp,
+                tint = tint,
+                onClick = onIconClick
+            )
+        } else {
+            Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(20.dp))
+        }
+
+        Spacer(Modifier.width(8.dp))
+
+        // Step Down [-] Button
+        TvIconButton(
+            icon = Icons.Default.Remove,
+            contentDescription = "$label Down",
+            size = 30.dp,
+            iconSize = 16.dp,
+            onClick = onStepDown
+        )
+
+        Spacer(Modifier.width(6.dp))
+
+        // Interactive Level Bar (D-Pad Left/Right + Touch Slider)
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(34.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .border(
+                    BorderStroke(
+                        if (isBarFocused) 2.dp else 0.dp,
+                        if (isBarFocused) MaterialTheme.colorScheme.primary else Color.Transparent
+                    ),
+                    RoundedCornerShape(8.dp)
+                )
+                .focusable(interactionSource = barInteractionSource)
+                .onKeyEvent { event ->
+                    if (event.type == KeyEventType.KeyDown) {
+                        when (event.key) {
+                            Key.DirectionLeft -> {
+                                onStepDown()
+                                true
+                            }
+                            Key.DirectionRight -> {
+                                onStepUp()
+                                true
+                            }
+                            Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> {
+                                if (onIconClick != null) onIconClick() else onStepUp()
+                                true
+                            }
+                            else -> false
+                        }
+                    } else false
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Slider(
+                value = currentFraction.coerceIn(0f, 1f),
+                onValueChange = onSetFraction,
+                valueRange = 0f..1f,
+                colors = SliderDefaults.colors(
+                    thumbColor = tint,
+                    activeTrackColor = tint,
+                    inactiveTrackColor = Color.DarkGray
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        Spacer(Modifier.width(6.dp))
+
+        // Step Up [+] Button
+        TvIconButton(
+            icon = Icons.Default.Add,
+            contentDescription = "$label Up",
+            size = 30.dp,
+            iconSize = 16.dp,
+            onClick = onStepUp
+        )
+
+        Spacer(Modifier.width(8.dp))
+
+        Text(
+            text = displayText,
+            color = Color.White,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.width(36.dp)
+        )
+    }
+}
+
+/**
+ * In-Player Quick Channels Drawer:
+ * - Slides out from the right
+ * - Auto-scrolls and requests initial focus on currently active channel
+ * - Navigable with D-pad Up/Down
+ * - Pressing OK zaps to the selected channel immediately
+ */
 @Composable
 fun InPlayerChannelDrawer(
     channels: List<Channel>,
@@ -1013,21 +1305,39 @@ fun InPlayerChannelDrawer(
     onSelectChannel: (Channel) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val selectedIndex = remember(channels, currentChannel) {
+        val idx = channels.indexOfFirst { it.streamUrl == currentChannel?.streamUrl }
+        if (idx >= 0) idx else 0
+    }
+
+    val listState = rememberLazyListState()
+    val initialFocusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        if (channels.isNotEmpty()) {
+            delay(100)
+            listState.scrollToItem(maxOf(0, selectedIndex - 2))
+            try {
+                initialFocusRequester.requestFocus()
+            } catch (_: Exception) {}
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.6f))
+            .background(Color.Black.copy(alpha = 0.65f))
             .clickable(onClick = onDismiss)
     ) {
         Surface(
             modifier = Modifier
                 .fillMaxHeight()
-                .width(360.dp)
+                .width(380.dp)
                 .align(Alignment.CenterEnd)
-                .clickable(enabled = false) {}, // Prevent dismiss when tapping inside drawer
+                .clickable(enabled = false) {},
             shape = RoundedCornerShape(topStart = 18.dp, bottomStart = 18.dp),
             color = NSSurface,
-            border = androidx.compose.foundation.BorderStroke(1.dp, NSBorder)
+            border = BorderStroke(1.dp, NSBorder)
         ) {
             Column(
                 modifier = Modifier
@@ -1040,12 +1350,16 @@ fun InPlayerChannelDrawer(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text("Channels", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = NSTextPrimary)
-                        Text("${channels.size} channels available", fontSize = 12.sp, color = NSTextSecondary)
+                        Text("Channels", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = NSTextPrimary)
+                        Text("${channels.size} channels available (D-Pad Navigate)", fontSize = 12.sp, color = NSTextSecondary)
                     }
-                    IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = NSTextSecondary)
-                    }
+                    TvIconButton(
+                        icon = Icons.Default.Close,
+                        contentDescription = "Close Drawer",
+                        size = 36.dp,
+                        iconSize = 18.dp,
+                        onClick = onDismiss
+                    )
                 }
 
                 Spacer(Modifier.height(14.dp))
@@ -1059,16 +1373,20 @@ fun InPlayerChannelDrawer(
                     }
                 } else {
                     LazyColumn(
+                        state = listState,
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        items(channels, key = { it.id }) { ch ->
+                        itemsIndexed(channels, key = { _, ch -> ch.id }) { index, ch ->
                             val isSelected = ch.streamUrl == currentChannel?.streamUrl
+                            val itemRequester = if (index == selectedIndex) initialFocusRequester else null
+
                             FocusableCard(
                                 onClick = { onSelectChannel(ch) },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(58.dp),
+                                    .height(60.dp)
+                                    .then(if (itemRequester != null) Modifier.focusRequester(itemRequester) else Modifier),
                                 shape = RoundedCornerShape(10.dp),
                                 backgroundColor = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f) else NSSurfaceCard,
                                 borderColor = if (isSelected) MaterialTheme.colorScheme.primary else NSBorder
@@ -1115,12 +1433,18 @@ fun InPlayerChannelDrawer(
                                         )
                                     }
                                     if (isSelected) {
-                                        Icon(
-                                            Icons.Default.PlayArrow,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(20.dp)
-                                        )
+                                        Surface(
+                                            shape = RoundedCornerShape(4.dp),
+                                            color = MaterialTheme.colorScheme.primary
+                                        ) {
+                                            Text(
+                                                text = "PLAYING",
+                                                color = Color.White,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -1128,6 +1452,57 @@ fun InPlayerChannelDrawer(
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Focusable radio option for TV dialogs (Audio, Subtitles, Sleep Timer)
+ */
+@Composable
+fun TvDialogOption(
+    selected: Boolean,
+    label: String,
+    onSelect: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    Surface(
+        shape = RoundedCornerShape(10.dp),
+        color = if (isFocused) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f) else if (selected) NSSurfaceVariant else Color.Transparent,
+        border = if (isFocused) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
+        modifier = modifier
+            .fillMaxWidth()
+            .focusable(interactionSource = interactionSource)
+            .onKeyEvent { event ->
+                if (event.type == KeyEventType.KeyUp && (event.key == Key.DirectionCenter || event.key == Key.Enter || event.key == Key.NumPadEnter)) {
+                    onSelect()
+                    true
+                } else false
+            }
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onSelect)
+            .padding(vertical = 3.dp, horizontal = 4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp, horizontal = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            RadioButton(
+                selected = selected,
+                onClick = onSelect,
+                colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+            )
+            Spacer(Modifier.width(10.dp))
+            Text(
+                text = label,
+                color = if (isFocused || selected) Color.White else NSTextPrimary,
+                fontSize = 14.sp,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+            )
         }
     }
 }
@@ -1148,74 +1523,45 @@ fun TrackSelectionDialog(
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Audio", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 14.sp)
+                Text("Audio Tracks", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 14.sp)
                 if (audioTracks.isEmpty()) {
-                    Text("Default Audio Track", color = NSTextSecondary, fontSize = 13.sp)
+                    Text("Default Audio Stream", color = NSTextSecondary, fontSize = 13.sp)
                 } else {
                     audioTracks.forEach { track ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable { onSelectAudio(track) }
-                                .padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = track.isSelected,
-                                onClick = { onSelectAudio(track) }
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(track.name, color = NSTextPrimary, fontSize = 14.sp)
-                        }
+                        TvDialogOption(
+                            selected = track.isSelected,
+                            label = track.name,
+                            onSelect = { onSelectAudio(track) }
+                        )
                     }
                 }
 
-                HorizontalDivider(color = NSBorder)
+                HorizontalDivider(color = NSBorder, modifier = Modifier.padding(vertical = 4.dp))
 
-                Text("Subtitles", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 14.sp)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable { onSelectSubtitle(null) }
-                        .padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = subtitleTracks.none { it.isSelected },
-                        onClick = { onSelectSubtitle(null) }
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text("Off", color = NSTextPrimary, fontSize = 14.sp)
-                }
+                Text("Subtitle Tracks", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 14.sp)
+                TvDialogOption(
+                    selected = subtitleTracks.none { it.isSelected },
+                    label = "Off (Disable Subtitles)",
+                    onSelect = { onSelectSubtitle(null) }
+                )
 
                 subtitleTracks.forEach { track ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable { onSelectSubtitle(track) }
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = track.isSelected,
-                            onClick = { onSelectSubtitle(track) }
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(track.name, color = NSTextPrimary, fontSize = 14.sp)
-                    }
+                    TvDialogOption(
+                        selected = track.isSelected,
+                        label = track.name,
+                        onSelect = { onSelectSubtitle(track) }
+                    )
                 }
             }
         },
         confirmButton = {},
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Close", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-            }
+            TvTextButton(
+                text = "Close",
+                onClick = onDismiss
+            )
         },
         containerColor = NSSurface,
         shape = RoundedCornerShape(16.dp)
@@ -1245,29 +1591,20 @@ fun SleepTimerDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 options.forEach { (label, minutes) ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable { onSelect(minutes) }
-                            .padding(vertical = 8.dp, horizontal = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = currentMinutes == minutes,
-                            onClick = { onSelect(minutes) }
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(label, color = NSTextPrimary, fontSize = 15.sp)
-                    }
+                    TvDialogOption(
+                        selected = currentMinutes == minutes,
+                        label = label,
+                        onSelect = { onSelect(minutes) }
+                    )
                 }
             }
         },
         confirmButton = {},
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel", color = NSTextSecondary)
-            }
+            TvTextButton(
+                text = "Cancel",
+                onClick = onDismiss
+            )
         },
         containerColor = NSSurface,
         shape = RoundedCornerShape(16.dp)

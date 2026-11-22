@@ -11,14 +11,22 @@
     "scheme": "APK Signature Scheme v2",
     "status": "Verified"
   },
+  "remoteControlSupport": {
+    "status": "Fully Supported",
+    "dpadNavigation": true,
+    "fastZapping": true,
+    "inPlayerChannelDrawer": true,
+    "audioSubtitleSelection": true,
+    "hardwareVolumeKeys": true
+  },
   "packages": [
     {
       "filename": "NS-Player-universal-release.apk",
       "variant": "release",
       "architecture": "universal",
       "supportedAbis": ["arm64-v8a", "armeabi-v7a", "x86_64", "x86"],
-      "sizeBytes": 16192109,
-      "sha256": "20a0019dd7cfcbd77575a183cf9870d446688a7071e27b917345ab3cc14eaa3e",
+      "sizeBytes": 16208493,
+      "sha256": "3ac495962c503b2e00b491012a7a8d89272360915ed71c8772d2dd77573b1c9c",
       "recommendedFor": "Universal compatibility across all Android TVs, Fire TVs, Smartphones, Tablets, and Emulators"
     },
     {
@@ -26,8 +34,8 @@
       "variant": "release",
       "architecture": "arm64-v8a",
       "supportedAbis": ["arm64-v8a"],
-      "sizeBytes": 16094173,
-      "sha256": "ffa495d2fccb735c166575be5487170e76f80cfc06e01463dfc3910a43e4ec88",
+      "sizeBytes": 16110557,
+      "sha256": "c53ce1b0367738f37aff4cee415ab85efef8a0fd8c687bebc0643a5e498cc7f3",
       "recommendedFor": "Modern 64-bit ARM smartphones, Google TV Streamer 4K, NVIDIA Shield TV, Fire TV Cube 3rd Gen"
     },
     {
@@ -35,8 +43,8 @@
       "variant": "release",
       "architecture": "armeabi-v7a",
       "supportedAbis": ["armeabi-v7a"],
-      "sizeBytes": 16091481,
-      "sha256": "f2c6d98157f23bf30c542cb3e552dfdc30bf22ca23ffff199b2b2fa106ec5a81",
+      "sizeBytes": 16107865,
+      "sha256": "0fea925a9706a4800739c55bd595edc316b1b44a600db583458608515e094f3b",
       "recommendedFor": "32-bit legacy TV boxes, Fire TV Stick 4K (1st/2nd Gen), Fire TV Stick Lite/Max, older phones"
     },
     {
@@ -44,8 +52,8 @@
       "variant": "release",
       "architecture": "x86_64",
       "supportedAbis": ["x86_64"],
-      "sizeBytes": 16093279,
-      "sha256": "b0a25297f938314ae33597893594af26ee7d3713ff550545724276aaa1206a72",
+      "sizeBytes": 16109663,
+      "sha256": "4594543cfd162bd753b190b1f63d28a1303cd962bc2cbcb495811bca56239d8b",
       "recommendedFor": "64-bit Android Studio Emulators, ChromeOS devices, Windows Subsystem for Android (WSA)"
     },
     {
@@ -53,8 +61,8 @@
       "variant": "release",
       "architecture": "x86",
       "supportedAbis": ["x86"],
-      "sizeBytes": 16092197,
-      "sha256": "f4f4da1328203446200d41591f3d20362fd4fb1698afdf265340b37ef19144b3",
+      "sizeBytes": 16108581,
+      "sha256": "384a46d9f68d3b51359edacfa2b773938c6b2f7ffde36212fd334923bf68990f",
       "recommendedFor": "32-bit x86 emulators and legacy Intel Atom devices"
     },
     {
@@ -62,8 +70,8 @@
       "variant": "debug",
       "architecture": "universal",
       "supportedAbis": ["arm64-v8a", "armeabi-v7a", "x86_64", "x86"],
-      "sizeBytes": 22624035,
-      "sha256": "b7d49de95aef4bcc2873d78c22a642e345a004e77d41e9c161492124ada7881a",
+      "sizeBytes": 22734438,
+      "sha256": "589c0ceb83bbe9eeec12acf77e065871b9845b810e213058f5395b0a8946f090",
       "recommendedFor": "Development testing, debugging with ADB logcat"
     }
   ]
