@@ -4,10 +4,13 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
@@ -16,8 +19,7 @@ import androidx.compose.material.icons.filled.LiveTv
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,6 +36,8 @@ import coil.compose.AsyncImage
 import com.genuine.nsplayer.data.model.Channel
 import com.genuine.nsplayer.data.model.ContentType
 import com.genuine.nsplayer.data.model.PlaybackHistory
+import com.genuine.nsplayer.data.model.PluginEpisode
+import com.genuine.nsplayer.data.model.PluginMediaItem
 import com.genuine.nsplayer.ui.theme.*
 
 @Composable
@@ -526,5 +530,436 @@ fun ShimmerPlaceholder(
         modifier = modifier
             .clip(shape)
             .background(brush)
+    )
+}
+
+@Composable
+fun PluginMediaCard(
+    media: PluginMediaItem,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    FocusableCard(
+        onClick = onClick,
+        modifier = modifier
+            .width(135.dp)
+            .height(200.dp),
+        shape = RoundedCornerShape(12.dp),
+        backgroundColor = NexoraSurface
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (!media.posterUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = media.posterUrl,
+                    contentDescription = media.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(NexoraSurfaceElevated, NexoraSurface)
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (media.type == ContentType.SERIES) Icons.Default.Tv else Icons.Default.Movie,
+                        contentDescription = null,
+                        tint = NexoraTextSecondary.copy(alpha = 0.5f),
+                        modifier = Modifier.size(42.dp)
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(80.dp)
+                    .align(Alignment.BottomCenter)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color.Transparent, Color.Black.copy(alpha = 0.9f))
+                        )
+                    )
+            )
+
+            if (media.rating != null && media.rating > 0) {
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    color = Color.Black.copy(alpha = 0.75f),
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(6.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "★",
+                            color = Color(0xFFFFC107),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(Modifier.width(2.dp))
+                        Text(
+                            text = "%.1f".format(media.rating),
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            Surface(
+                shape = RoundedCornerShape(4.dp),
+                color = when (media.type) {
+                    ContentType.SERIES -> NexoraPrimaryAccent.copy(alpha = 0.85f)
+                    ContentType.LIVE_TV -> NexoraError.copy(alpha = 0.85f)
+                    else -> NexoraSecondaryAccent.copy(alpha = 0.85f)
+                },
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(6.dp)
+            ) {
+                Text(
+                    text = when (media.type) {
+                        ContentType.SERIES -> "SERIES"
+                        ContentType.LIVE_TV -> "LIVE"
+                        else -> "MOVIE"
+                    },
+                    color = NexoraBackground,
+                    fontSize = 8.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                )
+            }
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(8.dp)
+            ) {
+                Text(
+                    text = media.title,
+                    color = NexoraTextPrimary,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun MediaDetailDialog(
+    media: PluginMediaItem,
+    onDismiss: () -> Unit,
+    onPlay: (streamUrl: String, headers: Map<String, String>) -> Unit,
+    onResolveStream: (media: PluginMediaItem, episodeId: String?, quality: String, onReady: (String, Map<String, String>) -> Unit) -> Unit,
+    onFetchEpisodes: (media: PluginMediaItem, onReady: (List<PluginEpisode>) -> Unit) -> Unit
+) {
+    var isLoading by remember { mutableStateOf(false) }
+    var episodes by remember { mutableStateOf<List<PluginEpisode>>(emptyList()) }
+    var selectedQuality by remember { mutableStateOf("720") }
+    var hasFetchedEpisodes by remember { mutableStateOf(false) }
+
+    LaunchedEffect(media.id) {
+        if (media.type == ContentType.SERIES && !hasFetchedEpisodes) {
+            onFetchEpisodes(media) { fetched ->
+                episodes = fetched
+                hasFetchedEpisodes = true
+            }
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = { if (!isLoading) onDismiss() },
+        modifier = Modifier
+            .fillMaxWidth(0.92f)
+            .heightIn(max = 620.dp),
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
+        containerColor = NexoraBackground,
+        shape = RoundedCornerShape(16.dp),
+        confirmButton = {},
+        dismissButton = {},
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(4.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = NexoraPrimaryAccent.copy(alpha = 0.15f)
+                    ) {
+                        Text(
+                            text = media.pluginName.ifBlank { "EXTENSION" }.uppercase(),
+                            color = NexoraPrimaryAccent,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+
+                    IconButton(onClick = onDismiss) {
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = NexoraTextSecondary)
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = NexoraSurface,
+                        modifier = Modifier
+                            .width(105.dp)
+                            .height(150.dp)
+                    ) {
+                        if (!media.posterUrl.isNullOrBlank()) {
+                            AsyncImage(
+                                model = media.posterUrl,
+                                contentDescription = media.title,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = if (media.type == ContentType.SERIES) Icons.Default.Tv else Icons.Default.Movie,
+                                    contentDescription = null,
+                                    tint = NexoraTextSecondary,
+                                    modifier = Modifier.size(36.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = media.title,
+                            color = NexoraTextPrimary,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (media.rating != null && media.rating > 0) {
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = Color(0xFFFFC107).copy(alpha = 0.2f)
+                                ) {
+                                    Text(
+                                        text = "★ ${"%.1f".format(media.rating)}",
+                                        color = Color(0xFFFFC107),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = NexoraSurfaceElevated
+                            ) {
+                                Text(
+                                    text = when (media.type) {
+                                        ContentType.SERIES -> "TV Series"
+                                        ContentType.LIVE_TV -> "Live TV"
+                                        else -> "Movie"
+                                    },
+                                    color = NexoraTextSecondary,
+                                    fontSize = 11.sp,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+
+                        if (!media.plot.isNullOrBlank()) {
+                            Text(
+                                text = media.plot,
+                                color = NexoraTextSecondary,
+                                fontSize = 12.sp,
+                                maxLines = 4,
+                                overflow = TextOverflow.Ellipsis,
+                                lineHeight = 16.sp
+                            )
+                        }
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            listOf("1080p", "720p", "480p").forEach { q ->
+                                val selected = (selectedQuality == q.removeSuffix("p"))
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = if (selected) NexoraPrimaryAccent else NexoraSurfaceElevated,
+                                    modifier = Modifier.clickable { selectedQuality = q.removeSuffix("p") }
+                                ) {
+                                    Text(
+                                        text = q,
+                                        color = if (selected) NexoraBackground else NexoraTextSecondary,
+                                        fontSize = 11.sp,
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(14.dp))
+
+                if (media.type == ContentType.SERIES) {
+                    Text(
+                        text = "Episodes (${episodes.size})",
+                        color = NexoraTextPrimary,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(Modifier.height(8.dp))
+
+                    if (episodes.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(100.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(28.dp),
+                                color = NexoraPrimaryAccent
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            items(episodes, key = { it.id }) { ep ->
+                                FocusableCard(
+                                    onClick = {
+                                        if (!isLoading) {
+                                            isLoading = true
+                                            onResolveStream(media, ep.id, selectedQuality) { sUrl, headers ->
+                                                isLoading = false
+                                                onPlay(sUrl, headers)
+                                            }
+                                        }
+                                    },
+                                    shape = RoundedCornerShape(8.dp),
+                                    backgroundColor = NexoraSurface,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Text(
+                                                text = "${ep.number}.",
+                                                color = NexoraPrimaryAccent,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.sp
+                                            )
+                                            Spacer(Modifier.width(10.dp))
+                                            Text(
+                                                text = ep.title,
+                                                color = NexoraTextPrimary,
+                                                fontSize = 13.sp,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+
+                                        Icon(
+                                            imageVector = Icons.Default.PlayArrow,
+                                            contentDescription = "Play",
+                                            tint = NexoraPrimaryAccent,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    Spacer(Modifier.height(10.dp))
+                    Button(
+                        onClick = {
+                            if (!isLoading) {
+                                isLoading = true
+                                onResolveStream(media, null, selectedQuality) { sUrl, headers ->
+                                    isLoading = false
+                                    onPlay(sUrl, headers)
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = NexoraPrimaryAccent,
+                            contentColor = NexoraBackground
+                        ),
+                        shape = RoundedCornerShape(10.dp),
+                        enabled = !isLoading
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = NexoraBackground,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(Modifier.width(10.dp))
+                            Text("Resolving Stream...", fontWeight = FontWeight.Bold)
+                        } else {
+                            Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(22.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = if (media.type == ContentType.LIVE_TV) "Watch Live" else "Play Movie",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp
+                            )
+                        }
+                    }
+                }
+            }
+        }
     )
 }

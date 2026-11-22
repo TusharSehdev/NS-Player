@@ -54,14 +54,28 @@ data class PluginRepositoryItem(
 data class PluginMediaItem(
     val id: String,
     val pluginId: String,
+    val pluginName: String = "",
     val title: String,
     val posterUrl: String? = null,
     val bannerUrl: String? = null,
     val plot: String? = null,
     val year: Int? = null,
-    val type: ContentType = ContentType.LIVE_TV,
-    val streamUrl: String,
+    val rating: Double? = null,
+    val category: String = "Catalog",
+    val type: ContentType = ContentType.MOVIE,
+    val streamUrl: String? = null,
+    val dataUrl: String? = null,
+    val episodes: List<PluginEpisode> = emptyList(),
     val headers: Map<String, String> = emptyMap(),
     val drmScheme: String? = null,
     val drmLicense: String? = null
+)
+
+data class PluginEpisode(
+    val id: String,
+    val title: String,
+    val number: Int,
+    val season: Int = 1,
+    val duration: String? = null,
+    val coverImage: String? = null
 )

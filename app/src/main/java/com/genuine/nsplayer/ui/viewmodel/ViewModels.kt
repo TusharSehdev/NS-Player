@@ -39,6 +39,28 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val installedPlugins: StateFlow<List<PluginItem>> = pluginRepo.getInstalledPlugins()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // Installed Plugin Media Catalogs (Stremio model)
+    val pluginMedia: StateFlow<List<PluginMediaItem>> = pluginRepo.getAllPluginMedia()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val pluginCatalogRows: StateFlow<Map<String, List<PluginMediaItem>>> = pluginMedia.map { list ->
+        val rows = linkedMapOf<String, MutableList<PluginMediaItem>>()
+        list.forEach { item ->
+            val pName = item.pluginName.ifBlank { "Extension" }
+            val header = if (!item.category.startsWith(pName, ignoreCase = true)) {
+                "[$pName] ${item.category}"
+            } else {
+                item.category
+            }
+            rows.getOrPut(header) { mutableListOf() }.add(item)
+        }
+        rows
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
+    val pluginSources: StateFlow<List<String>> = pluginMedia.map { list ->
+        list.map { it.pluginName }.filter { it.isNotBlank() }.distinct()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     private val _importProgress = MutableStateFlow<Int?>(null)
     val importProgress: StateFlow<Int?> = _importProgress.asStateFlow()
 
@@ -98,6 +120,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             playlists.collect { list ->
                 if (_activePlaylistId.value == null && list.isNotEmpty()) {
                     _activePlaylistId.value = list.first().id
+                }
+            }
+        }
+
+        // Auto-sync media content for any installed plugin that has 0 media items
+        viewModelScope.launch {
+            installedPlugins.collect { installed ->
+                installed.forEach { p ->
+                    val count = pluginRepo.getMediaCountForPlugin(p.id)
+                    if (count == 0) {
+                        try {
+                            pluginRepo.syncPluginContent(p.id)
+                        } catch (_: Exception) {}
+                    }
                 }
             }
         }
@@ -216,10 +252,32 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun installPlugin(pluginId: String) {
         viewModelScope.launch {
             try {
-                pluginRepo.installPlugin(pluginId)
-                _infoMessage.value = "Extension installed."
+                _importProgress.value = 0
+                _errorMessage.value = null
+                val count = pluginRepo.installPlugin(pluginId)
+                _infoMessage.value = if (count > 0) {
+                    "Extension installed! Synced $count titles."
+                } else {
+                    "Extension installed."
+                }
             } catch (e: Exception) {
                 _errorMessage.value = "Failed to install extension: ${e.localizedMessage}"
+            } finally {
+                _importProgress.value = null
+            }
+        }
+    }
+
+    fun syncPlugin(pluginId: String) {
+        viewModelScope.launch {
+            try {
+                _importProgress.value = 0
+                val count = pluginRepo.syncPluginContent(pluginId)
+                _infoMessage.value = "Catalog refreshed ($count items synced)."
+            } catch (e: Exception) {
+                _errorMessage.value = "Sync failed: ${e.localizedMessage}"
+            } finally {
+                _importProgress.value = null
             }
         }
     }
@@ -227,10 +285,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun updatePlugin(pluginId: String) {
         viewModelScope.launch {
             try {
-                pluginRepo.updatePlugin(pluginId)
-                _infoMessage.value = "Extension updated."
+                _importProgress.value = 0
+                val count = pluginRepo.updatePlugin(pluginId)
+                _infoMessage.value = "Extension updated ($count items synced)."
             } catch (e: Exception) {
                 _errorMessage.value = "Failed to update extension: ${e.localizedMessage}"
+            } finally {
+                _importProgress.value = null
             }
         }
     }
@@ -248,6 +309,39 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _infoMessage.value = "Extension uninstalled."
             } catch (e: Exception) {
                 _errorMessage.value = "Failed to uninstall extension: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    fun resolveMediaStream(
+        media: PluginMediaItem,
+        episodeId: String? = null,
+        preferredQuality: String = "720",
+        onReady: (streamUrl: String, headers: Map<String, String>) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                _importProgress.value = 0
+                val res = pluginRepo.resolveMediaStream(media, episodeId, preferredQuality)
+                onReady(res.url, res.headers)
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to resolve stream: ${e.localizedMessage}"
+            } finally {
+                _importProgress.value = null
+            }
+        }
+    }
+
+    fun fetchEpisodes(
+        media: PluginMediaItem,
+        onReady: (List<PluginEpisode>) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                val eps = pluginRepo.fetchEpisodes(media)
+                onReady(eps)
+            } catch (_: Exception) {
+                onReady(emptyList())
             }
         }
     }

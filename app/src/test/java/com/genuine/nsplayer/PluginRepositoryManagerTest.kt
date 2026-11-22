@@ -31,6 +31,17 @@ class PluginRepositoryManagerTest {
         override suspend fun updateRepository(repo: PluginRepositoryEntity) {}
         override suspend fun updateRepoStats(id: Long, count: Int, timestamp: Long) {}
         override suspend fun deleteRepository(id: Long) {}
+
+        override fun getAllPluginMedia(): Flow<List<com.genuine.nsplayer.data.local.PluginMediaEntity>> = flowOf(emptyList())
+        override fun getMediaByPlugin(pluginId: String): Flow<List<com.genuine.nsplayer.data.local.PluginMediaEntity>> = flowOf(emptyList())
+        override fun getMediaByType(type: String): Flow<List<com.genuine.nsplayer.data.local.PluginMediaEntity>> = flowOf(emptyList())
+        override fun getMediaByCategory(category: String): Flow<List<com.genuine.nsplayer.data.local.PluginMediaEntity>> = flowOf(emptyList())
+        override suspend fun getMediaById(id: String): com.genuine.nsplayer.data.local.PluginMediaEntity? = null
+        override fun searchPluginMedia(query: String): Flow<List<com.genuine.nsplayer.data.local.PluginMediaEntity>> = flowOf(emptyList())
+        override suspend fun insertMedia(items: List<com.genuine.nsplayer.data.local.PluginMediaEntity>) {}
+        override suspend fun deleteMediaByPlugin(pluginId: String) {}
+        override suspend fun deleteAllMedia() {}
+        override suspend fun getMediaCountForPlugin(pluginId: String): Int = 0
     }
 
     @Test

@@ -23,6 +23,8 @@ class PluginRepositoryManager(
         .followRedirects(true)
         .build()
 
+    val contentResolver = PluginContentResolver(pluginDao, okHttpClient)
+
     fun getAllRepositories(): Flow<List<PluginRepositoryItem>> =
         pluginDao.getAllRepositories().map { list -> list.map { it.toModel() } }
 
@@ -31,6 +33,18 @@ class PluginRepositoryManager(
 
     fun getInstalledPlugins(): Flow<List<PluginItem>> =
         pluginDao.getInstalledPlugins().map { list -> list.map { it.toModel() } }
+
+    fun getAllPluginMedia(): Flow<List<PluginMediaItem>> =
+        pluginDao.getAllPluginMedia().map { list -> list.map { it.toModel() } }
+
+    fun getMediaByPlugin(pluginId: String): Flow<List<PluginMediaItem>> =
+        pluginDao.getMediaByPlugin(pluginId).map { list -> list.map { it.toModel() } }
+
+    fun getMediaByType(type: ContentType): Flow<List<PluginMediaItem>> =
+        pluginDao.getMediaByType(type.name).map { list -> list.map { it.toModel() } }
+
+    fun searchPluginMedia(query: String): Flow<List<PluginMediaItem>> =
+        pluginDao.searchPluginMedia(query).map { list -> list.map { it.toModel() } }
 
     suspend fun addRepository(name: String, url: String): Long = withContext(Dispatchers.IO) {
         val trimmedUrl = url.trim()
@@ -106,24 +120,40 @@ class PluginRepositoryManager(
         pluginDao.updateRepoStats(repoId, parsedPlugins.size, System.currentTimeMillis())
     }
 
-    suspend fun installPlugin(pluginId: String) = withContext(Dispatchers.IO) {
-        val plugin = pluginDao.getPluginById(pluginId) ?: return@withContext
+    suspend fun installPlugin(pluginId: String): Int = withContext(Dispatchers.IO) {
+        val plugin = pluginDao.getPluginById(pluginId) ?: return@withContext 0
         pluginDao.insertOrUpdate(
             plugin.copy(
                 status = PluginStatus.INSTALLED.name,
                 isEnabled = true
             )
         )
+        // Automatically discover & sync content (Stremio model)
+        try {
+            contentResolver.syncPlugin(plugin.toModel())
+        } catch (_: Exception) {
+            0
+        }
     }
 
-    suspend fun updatePlugin(pluginId: String) = withContext(Dispatchers.IO) {
-        val plugin = pluginDao.getPluginById(pluginId) ?: return@withContext
+    suspend fun syncPluginContent(pluginId: String): Int = withContext(Dispatchers.IO) {
+        val plugin = pluginDao.getPluginById(pluginId) ?: return@withContext 0
+        contentResolver.syncPlugin(plugin.toModel())
+    }
+
+    suspend fun updatePlugin(pluginId: String): Int = withContext(Dispatchers.IO) {
+        val plugin = pluginDao.getPluginById(pluginId) ?: return@withContext 0
         pluginDao.insertOrUpdate(
             plugin.copy(
                 status = PluginStatus.INSTALLED.name,
                 isEnabled = true
             )
         )
+        try {
+            contentResolver.syncPlugin(plugin.toModel())
+        } catch (_: Exception) {
+            0
+        }
     }
 
     suspend fun setPluginEnabled(pluginId: String, enabled: Boolean) = withContext(Dispatchers.IO) {
@@ -132,11 +162,28 @@ class PluginRepositoryManager(
 
     suspend fun uninstallPlugin(pluginId: String) = withContext(Dispatchers.IO) {
         val plugin = pluginDao.getPluginById(pluginId) ?: return@withContext
+        pluginDao.deleteMediaByPlugin(pluginId)
         if (plugin.repositoryUrl.isNullOrBlank()) {
             pluginDao.deletePlugin(pluginId)
         } else {
             pluginDao.setPluginStatus(pluginId, PluginStatus.AVAILABLE.name)
         }
+    }
+
+    suspend fun resolveMediaStream(
+        media: PluginMediaItem,
+        episodeId: String? = null,
+        preferredQuality: String = "720"
+    ): ResolvedStream = withContext(Dispatchers.IO) {
+        contentResolver.resolveStream(media, episodeId, preferredQuality)
+    }
+
+    suspend fun fetchEpisodes(media: PluginMediaItem): List<PluginEpisode> = withContext(Dispatchers.IO) {
+        contentResolver.fetchEpisodes(media)
+    }
+
+    suspend fun getMediaCountForPlugin(pluginId: String): Int = withContext(Dispatchers.IO) {
+        pluginDao.getMediaCountForPlugin(pluginId)
     }
 
     suspend fun deleteRepository(repoId: Long) = withContext(Dispatchers.IO) {

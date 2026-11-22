@@ -130,16 +130,24 @@ class MainActivity : ComponentActivity() {
                                     TvTab.HOME -> HomeScreen(
                                         viewModel = mainViewModel,
                                         onPlayChannel = { channel -> PlayerActivity.launch(this@MainActivity, channel) },
-                                        onPlayDirectStream = { url, headers, drmScheme, drmLicense ->
-                                            launchDirectStream(url, headers, drmScheme, drmLicense)
+                                        onPlayDirectStream = { url, headers, title, logo ->
+                                            launchDirectStream(url, headers, title, logo)
                                         },
                                         onNavigateToChannels = { tvTab = TvTab.LIVE_TV },
                                         onNavigateToPlaylists = { tvTab = TvTab.LIBRARY },
                                         onNavigateToExtensions = { tvTab = TvTab.EXTENSIONS }
                                     )
-                                    TvTab.LIVE_TV, TvTab.MOVIES, TvTab.SERIES -> ChannelListScreen(
+                                    TvTab.LIVE_TV -> ChannelListScreen(
                                         viewModel = mainViewModel,
                                         onPlayChannel = { channel -> PlayerActivity.launch(this@MainActivity, channel) }
+                                    )
+                                    TvTab.MOVIES, TvTab.SERIES -> DiscoverScreen(
+                                        viewModel = mainViewModel,
+                                        onPlayChannel = { channel -> PlayerActivity.launch(this@MainActivity, channel) },
+                                        onPlayDirectStream = { url, headers, title, logo ->
+                                            launchDirectStream(url, headers, title, logo)
+                                        },
+                                        onNavigateToExtensions = { tvTab = TvTab.EXTENSIONS }
                                     )
                                     TvTab.LIBRARY -> LibraryScreen(
                                         viewModel = mainViewModel,
@@ -221,8 +229,8 @@ class MainActivity : ComponentActivity() {
                                     MobileTab.HOME -> HomeScreen(
                                         viewModel = mainViewModel,
                                         onPlayChannel = { channel -> PlayerActivity.launch(this@MainActivity, channel) },
-                                        onPlayDirectStream = { url, headers, drmScheme, drmLicense ->
-                                            launchDirectStream(url, headers, drmScheme, drmLicense)
+                                        onPlayDirectStream = { url, headers, title, logo ->
+                                            launchDirectStream(url, headers, title, logo)
                                         },
                                         onNavigateToChannels = { mobileTab = MobileTab.LIVE_TV },
                                         onNavigateToPlaylists = { mobileTab = MobileTab.LIBRARY },
@@ -235,6 +243,9 @@ class MainActivity : ComponentActivity() {
                                     MobileTab.DISCOVER -> DiscoverScreen(
                                         viewModel = mainViewModel,
                                         onPlayChannel = { channel -> PlayerActivity.launch(this@MainActivity, channel) },
+                                        onPlayDirectStream = { url, headers, title, logo ->
+                                            launchDirectStream(url, headers, title, logo)
+                                        },
                                         onNavigateToExtensions = { mobileTab = MobileTab.EXTENSIONS }
                                     )
                                     MobileTab.LIBRARY -> LibraryScreen(
@@ -264,13 +275,16 @@ class MainActivity : ComponentActivity() {
     private fun launchDirectStream(
         url: String,
         headers: Map<String, String>,
-        drmScheme: String?,
-        drmLicense: String?
+        title: String? = null,
+        logoUrl: String? = null,
+        drmScheme: String? = null,
+        drmLicense: String? = null
     ) {
         val channel = Channel(
             playlistId = 0,
-            name = "Direct Stream",
+            name = title ?: "Direct Stream",
             streamUrl = url,
+            logoUrl = logoUrl,
             headers = headers,
             drmScheme = drmScheme,
             drmLicense = drmLicense

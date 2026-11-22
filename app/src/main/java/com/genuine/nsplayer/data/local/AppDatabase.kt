@@ -12,9 +12,10 @@ import androidx.room.RoomDatabase
         HistoryEntity::class,
         EpgEntity::class,
         PluginEntity::class,
-        PluginRepositoryEntity::class
+        PluginRepositoryEntity::class,
+        PluginMediaEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

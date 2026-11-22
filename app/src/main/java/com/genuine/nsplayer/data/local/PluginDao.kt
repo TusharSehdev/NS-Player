@@ -56,4 +56,35 @@ interface PluginDao {
 
     @Query("DELETE FROM plugin_repositories WHERE id = :id")
     suspend fun deleteRepository(id: Long)
+
+    // Plugin Media (Catalogs & Feeds for installed extensions)
+    @Query("SELECT * FROM plugin_media ORDER BY addedTime DESC")
+    fun getAllPluginMedia(): Flow<List<PluginMediaEntity>>
+
+    @Query("SELECT * FROM plugin_media WHERE pluginId = :pluginId ORDER BY addedTime DESC")
+    fun getMediaByPlugin(pluginId: String): Flow<List<PluginMediaEntity>>
+
+    @Query("SELECT * FROM plugin_media WHERE type = :type ORDER BY addedTime DESC")
+    fun getMediaByType(type: String): Flow<List<PluginMediaEntity>>
+
+    @Query("SELECT * FROM plugin_media WHERE category = :category ORDER BY addedTime DESC")
+    fun getMediaByCategory(category: String): Flow<List<PluginMediaEntity>>
+
+    @Query("SELECT * FROM plugin_media WHERE id = :id LIMIT 1")
+    suspend fun getMediaById(id: String): PluginMediaEntity?
+
+    @Query("SELECT * FROM plugin_media WHERE title LIKE '%' || :query || '%' OR category LIKE '%' || :query || '%'")
+    fun searchPluginMedia(query: String): Flow<List<PluginMediaEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMedia(items: List<PluginMediaEntity>)
+
+    @Query("DELETE FROM plugin_media WHERE pluginId = :pluginId")
+    suspend fun deleteMediaByPlugin(pluginId: String)
+
+    @Query("DELETE FROM plugin_media")
+    suspend fun deleteAllMedia()
+
+    @Query("SELECT COUNT(*) FROM plugin_media WHERE pluginId = :pluginId")
+    suspend fun getMediaCountForPlugin(pluginId: String): Int
 }

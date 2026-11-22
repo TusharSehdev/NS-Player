@@ -107,6 +107,7 @@ class PlayerActivity : ComponentActivity() {
         const val EXTRA_CHANNEL_ID = "extra_channel_id"
         const val EXTRA_DRM_SCHEME = "extra_drm_scheme"
         const val EXTRA_DRM_LICENSE = "extra_drm_license"
+        const val EXTRA_HEADERS = "extra_headers"
 
         fun launch(
             context: Context,
@@ -121,6 +122,9 @@ class PlayerActivity : ComponentActivity() {
                 putExtra(EXTRA_CHANNEL_ID, channel.id)
                 putExtra(EXTRA_DRM_SCHEME, channel.drmScheme)
                 putExtra(EXTRA_DRM_LICENSE, channel.drmLicense)
+                if (channel.headers.isNotEmpty()) {
+                    putExtra(EXTRA_HEADERS, HashMap(channel.headers))
+                }
             }
             context.startActivity(intent)
         }
@@ -144,6 +148,8 @@ class PlayerActivity : ComponentActivity() {
         val channelId = intent.getLongExtra(EXTRA_CHANNEL_ID, 0L)
         val drmScheme = intent.getStringExtra(EXTRA_DRM_SCHEME)
         val drmLicense = intent.getStringExtra(EXTRA_DRM_LICENSE)
+        @Suppress("UNCHECKED_CAST", "DEPRECATION")
+        val headers = (intent.getSerializableExtra(EXTRA_HEADERS) as? HashMap<String, String>) ?: emptyMap()
 
         if (playlistId > 0) {
             playerViewModel.loadPlaylistChannels(playlistId)
@@ -157,6 +163,7 @@ class PlayerActivity : ComponentActivity() {
                 streamUrl = streamUrl,
                 logoUrl = channelLogo,
                 groupTitle = groupTitle,
+                headers = headers,
                 drmScheme = drmScheme,
                 drmLicense = drmLicense
             )

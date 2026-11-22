@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.genuine.nsplayer.data.model.Channel
 import com.genuine.nsplayer.data.model.ContentType
+import com.genuine.nsplayer.data.model.PluginMediaItem
 import com.genuine.nsplayer.ui.common.*
 import com.genuine.nsplayer.ui.theme.*
 import com.genuine.nsplayer.ui.viewmodel.MainViewModel
@@ -42,9 +43,11 @@ fun HomeScreen(
     val favorites by viewModel.favorites.collectAsState()
     val history by viewModel.history.collectAsState()
     val installedPlugins by viewModel.installedPlugins.collectAsState()
+    val pluginCatalogRows by viewModel.pluginCatalogRows.collectAsState()
 
     val activePlaylist = playlists.firstOrNull { it.id == activeId }
     var showDirectStreamDialog by remember { mutableStateOf(false) }
+    var selectedMediaDetail by remember { mutableStateOf<PluginMediaItem?>(null) }
 
     LazyColumn(
         modifier = Modifier
@@ -243,6 +246,39 @@ fun HomeScreen(
             }
         }
 
+        // Installed Extensions Media Rows (Stremio Style)
+        if (pluginCatalogRows.isNotEmpty()) {
+            pluginCatalogRows.forEach { (rowTitle, itemsList) ->
+                if (itemsList.isNotEmpty()) {
+                    item(key = rowTitle) {
+                        SectionHeader(
+                            title = rowTitle,
+                            icon = Icons.Default.Movie,
+                            badgeText = "${itemsList.size}"
+                        )
+                        Spacer(Modifier.height(10.dp))
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                            contentPadding = PaddingValues(horizontal = 2.dp)
+                        ) {
+                            items(itemsList, key = { it.id }) { mediaItem ->
+                                PluginMediaCard(
+                                    media = mediaItem,
+                                    onClick = {
+                                        if (mediaItem.type == ContentType.LIVE_TV && !mediaItem.streamUrl.isNullOrBlank()) {
+                                            onPlayDirectStream(mediaItem.streamUrl, mediaItem.headers, mediaItem.title, mediaItem.posterUrl)
+                                        } else {
+                                            selectedMediaDetail = mediaItem
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // Playlist Overview Card
         item {
             FocusableCard(
@@ -364,6 +400,24 @@ fun HomeScreen(
             onPlay = { url, headers, drmScheme, drmLicense ->
                 showDirectStreamDialog = false
                 onPlayDirectStream(url, headers, drmScheme, drmLicense)
+            }
+        )
+    }
+
+    selectedMediaDetail?.let { media ->
+        MediaDetailDialog(
+            media = media,
+            onDismiss = { selectedMediaDetail = null },
+            onPlay = { sUrl, headers ->
+                val current = selectedMediaDetail
+                selectedMediaDetail = null
+                onPlayDirectStream(sUrl, headers, current?.title, current?.posterUrl)
+            },
+            onResolveStream = { m, epId, q, onReady ->
+                viewModel.resolveMediaStream(m, epId, q, onReady)
+            },
+            onFetchEpisodes = { m, onReady ->
+                viewModel.fetchEpisodes(m, onReady)
             }
         )
     }

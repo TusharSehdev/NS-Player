@@ -190,6 +190,7 @@ fun ExtensionsScreen(
                 ExtensionTab.INSTALLED -> InstalledPluginsTab(
                     plugins = installedPlugins,
                     onToggleEnable = { plugin, enabled -> viewModel.togglePluginEnabled(plugin.id, enabled) },
+                    onSync = { viewModel.syncPlugin(it.id) },
                     onUninstall = { viewModel.uninstallPlugin(it.id) }
                 )
                 ExtensionTab.REPOSITORIES -> RepositoriesTab(
@@ -328,6 +329,7 @@ fun DiscoverPluginsTab(
 fun InstalledPluginsTab(
     plugins: List<PluginItem>,
     onToggleEnable: (PluginItem, Boolean) -> Unit,
+    onSync: (PluginItem) -> Unit,
     onUninstall: (PluginItem) -> Unit
 ) {
     if (plugins.isEmpty()) {
@@ -448,6 +450,15 @@ fun InstalledPluginsTab(
                         )
 
                         Spacer(Modifier.width(8.dp))
+
+                        // Sync Button
+                        IconButton(onClick = { onSync(plugin) }) {
+                            Icon(
+                                Icons.Default.Sync,
+                                contentDescription = "Refresh Catalog",
+                                tint = NexoraPrimaryAccent
+                            )
+                        }
 
                         // Uninstall Button
                         IconButton(onClick = { onUninstall(plugin) }) {
